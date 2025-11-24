@@ -1,0 +1,1058 @@
+================================================================================
+📚 DOCUMENTACIÓN DE ENDPOINTS/APIs
+Sistema de Asistencia Escolar
+================================================================================
+
+BASE URL: http://localhost:4000/api
+
+================================================================================
+🔐 AUTENTICACIÓN Y SESIONES
+================================================================================
+
+POST /api/login
+Descripción: Iniciar sesión (maestros, prefectos, admin)
+Body:
+{
+  "usuario": "lramirez",
+  "contrasena": "pass123"
+}
+Respuesta:
+{
+  "success": true,
+  "user": {
+    "id": 3,
+    "nombre": "Luis Ramírez García",
+    "usuario": "lramirez",
+    "tipoUsuario": "maestro"
+  }
+}
+
+POST /api/logout
+Descripción: Cerrar sesión en el servidor
+Body: No requiere
+Respuesta:
+{
+  "success": true,
+  "message": "Sesión cerrada exitosamente"
+}
+
+GET /api/session
+Descripción: Verificar si hay una sesión activa
+Respuesta:
+{
+  "success": true,
+  "user": {
+    "id": 3,
+    "nombre": "Luis Ramírez García",
+    "usuario": "lramirez",
+    "tipoUsuario": "maestro"
+  }
+}
+
+================================================================================
+🎓 CARRERAS
+================================================================================
+
+GET /api/carreras
+Descripción: Obtener todas las carreras
+Respuesta: Array de carreras
+
+GET /api/carreras/:id
+Descripción: Obtener una carrera específica
+Ejemplo: GET /api/carreras/1
+
+POST /api/carreras
+Descripción: Crear una nueva carrera
+Body:
+{
+  "nombre_carrera": "Ingeniería en Sistemas Computacionales",
+  "codigo_carrera": "ISC"
+}
+
+PUT /api/carreras/:id
+Descripción: Actualizar una carrera
+Body: Igual que POST
+
+DELETE /api/carreras/:id
+Descripción: Eliminar una carrera
+
+
+================================================================================
+📖 SEMESTRES
+================================================================================
+
+GET /api/semestres
+Descripción: Obtener todos los semestres
+
+GET /api/semestres?id_carrera=1
+Descripción: Obtener semestres de una carrera específica
+
+GET /api/semestres/carrera/:idCarrera
+Descripción: Obtener semestres de una carrera
+Ejemplo: GET /api/semestres/carrera/1
+
+GET /api/semestres/:id
+Descripción: Obtener un semestre específico
+
+POST /api/semestres
+Descripción: Crear un semestre
+Body:
+{
+  "id_carrera": 1,
+  "numero_semestre": 5,
+  "nombre_semestre": "Quinto Semestre"
+}
+
+POST /api/semestres/generar
+Descripción: Generar múltiples semestres automáticamente
+Body:
+{
+  "id_carrera": 1,
+  "cantidad_semestres": 9
+}
+
+PUT /api/semestres/:id
+Descripción: Actualizar un semestre
+
+DELETE /api/semestres/:id
+Descripción: Eliminar un semestre
+
+
+================================================================================
+📚 MATERIAS
+================================================================================
+
+GET /api/materias
+Descripción: Obtener todas las materias
+
+GET /api/materias?id_carrera=1
+Descripción: Filtrar materias por carrera
+
+GET /api/materias/:id
+Descripción: Obtener una materia específica
+
+POST /api/materias
+Descripción: Crear una nueva materia
+Body:
+{
+  "id_carrera": 1,
+  "id_semestre": 3,
+  "nombre_materia": "Bases de Datos",
+  "codigo_materia": "BD-302"
+}
+Nota: Automáticamente se agrega al Plan de Estudios
+
+PUT /api/materias/:id
+Descripción: Actualizar una materia
+
+DELETE /api/materias/:id
+Descripción: Eliminar una materia
+
+
+================================================================================
+📋 PLAN DE ESTUDIOS
+================================================================================
+
+GET /api/plan-estudios
+Descripción: Obtener todo el plan de estudios
+
+GET /api/plan-estudios?id_carrera=1
+Descripción: Obtener plan de estudios de una carrera
+
+GET /api/plan-estudios/carrera/:idCarrera
+Descripción: Obtener plan de estudios completo de una carrera
+Ejemplo: GET /api/plan-estudios/carrera/1
+
+GET /api/plan-estudios/materias/:idCarrera/:idSemestre
+Descripción: Obtener materias de un semestre específico (IMPORTANTE para asignaciones)
+Ejemplo: GET /api/plan-estudios/materias/1/5
+Uso: Filtrar materias cuando se selecciona un grupo
+
+GET /api/plan-estudios/:id
+Descripción: Obtener un registro específico del plan
+
+POST /api/plan-estudios
+Descripción: Asignar una materia a un semestre
+Body:
+{
+  "id_carrera": 1,
+  "id_semestre": 5,
+  "id_materia": 2
+}
+
+DELETE /api/plan-estudios/:id
+Descripción: Quitar una materia del plan de estudios
+
+
+================================================================================
+👥 GRUPOS
+================================================================================
+
+GET /api/grupos
+Descripción: Obtener todos los grupos
+
+GET /api/grupos?id_carrera=1
+Descripción: Filtrar grupos por carrera
+
+GET /api/grupos?id_carrera=1&id_semestre=3
+Descripción: Filtrar grupos por carrera Y semestre
+
+GET /api/grupos/:id
+Descripción: Obtener un grupo específico
+
+POST /api/grupos
+Descripción: Crear un nuevo grupo
+Body:
+{
+  "id_carrera": 1,
+  "id_semestre": 5,
+  "nombre_grupo": "502",
+  "turno": "Matutino",
+  "periodo": "Enero-Junio",
+  "anio": 2025
+}
+
+PUT /api/grupos/:id
+Descripción: Actualizar un grupo
+
+DELETE /api/grupos/:id
+Descripción: Eliminar un grupo
+
+
+================================================================================
+🎓 ALUMNOS
+================================================================================
+
+GET /api/alumnos
+Descripción: Obtener todos los alumnos
+
+GET /api/alumnos/grupo/:idGrupo
+Descripción: Obtener alumnos de un grupo específico (IMPORTANTE para pasar lista)
+Ejemplo: GET /api/alumnos/grupo/5
+Uso: Panel de maestro - cargar lista de alumnos
+
+GET /api/alumnos/matricula/:matricula
+Descripción: Buscar alumno por matrícula
+Ejemplo: GET /api/alumnos/matricula/2023001
+
+GET /api/alumnos/:id
+Descripción: Obtener un alumno específico
+
+POST /api/alumnos
+Descripción: Registrar un nuevo alumno
+Body:
+{
+  "matricula": "2023001",
+  "nombre_alumno": "Juan",
+  "apellido_paterno": "Pérez",
+  "apellido_materno": "López",
+  "id_carrera": 1,
+  "id_semestre": 3,
+  "id_grupo": 1,
+  "foto_base64": "data:image/jpeg;base64,..."
+}
+
+PUT /api/alumnos/:id
+Descripción: Actualizar un alumno
+
+POST /api/alumnos/importar-csv
+Descripción: Importar múltiples alumnos desde archivo CSV
+Body:
+{
+  "alumnos": [
+    {
+      "matricula": "240460093-0",
+      "nombre_alumno": "JUAN CARLOS",
+      "apellido_paterno": "ACOSTA",
+      "apellido_materno": "BARRON",
+      "id_carrera": 1,
+      "id_semestre": 3,
+      "id_grupo": 1,
+      "activo": true
+    }
+  ]
+}
+Respuesta:
+{
+  "message": "Importación completada. 10 alumnos importados correctamente, 2 omitidos",
+  "importados": 10,
+  "omitidos": 2,
+  "total": 12,
+  "errores": ["Matrícula 240460093-0: ya existe"]
+}
+Nota: Omite automáticamente matrículas duplicadas. Ver ejemplo_importar_alumnos.csv
+
+DELETE /api/alumnos/:id
+Descripción: Eliminar un alumno
+Query Params (opcionales):
+  - forzar=true: Elimina también los registros de asistencia del alumno
+Respuesta (si tiene asistencias y no se forzó):
+{
+  "error": "No se puede eliminar porque tiene 2 registros de asistencia",
+  "success": false,
+  "tieneAsistencias": true,
+  "totalAsistencias": 2
+}
+Nota: Si el alumno tiene asistencias, el sistema pide confirmación. Al confirmar,
+      se eliminan primero las asistencias y luego el alumno.
+
+
+================================================================================
+👨‍🏫 MAESTROS
+================================================================================
+
+GET /api/maestros
+Descripción: Obtener todos los maestros
+
+GET /api/maestros/:id
+Descripción: Obtener un maestro específico
+
+GET /api/maestros/:id/completo
+Descripción: Obtener información completa del maestro
+
+POST /api/maestros
+Descripción: Registrar un nuevo maestro
+Body:
+{
+  "nombre_completo": "Luis",
+  "apellido_paterno": "Ramírez",
+  "apellido_materno": "García",
+  "nombre_usuario": "lramirez",
+  "contrasena": "pass123"
+}
+
+PUT /api/maestros/:id
+Descripción: Actualizar un maestro
+
+DELETE /api/maestros/:id
+Descripción: Eliminar un maestro
+
+
+================================================================================
+⏰ HORARIOS
+================================================================================
+
+GET /api/horarios
+Descripción: Obtener todos los horarios (40 bloques: 8 por día x 5 días)
+
+GET /api/horarios/disponibles?id_grupo=5&id_maestro=3
+Descripción: Obtener horarios disponibles (no ocupados)
+Uso: Al crear asignaciones - mostrar solo horarios libres
+
+GET /api/horarios/:id
+Descripción: Obtener un horario específico
+
+
+================================================================================
+📅 ASIGNACIONES (Horarios de Clases)
+================================================================================
+
+GET /api/asignaciones
+Descripción: Obtener todas las asignaciones
+
+GET /api/asignaciones?id_maestro=3
+Descripción: Obtener asignaciones de un maestro (IMPORTANTE para panel docente)
+Uso: Cargar grupos y materias que imparte el maestro
+
+GET /api/asignaciones?id_grupo=5
+Descripción: Obtener asignaciones de un grupo
+
+GET /api/asignaciones/:id
+Descripción: Obtener una asignación específica
+
+POST /api/asignaciones
+Descripción: Crear una nueva asignación
+Body:
+{
+  "id_grupo": 5,
+  "id_materia": 2,
+  "id_maestro": 3,
+  "id_horario": 1
+}
+
+PUT /api/asignaciones/:id
+Descripción: Actualizar una asignación
+
+DELETE /api/asignaciones/:id
+Descripción: Eliminar una asignación
+
+
+================================================================================
+✅ ASISTENCIAS (TOMA DE LISTA)
+================================================================================
+
+GET https://projectoasistencia.onrender.com/api/asistencias
+Descripción: Obtener todas las asistencias
+
+GET https://projectoasistencia.onrender.com/api/asistencias?id_grupo=5
+Descripción: Obtener asistencias de un grupo (IMPORTANTE para histórico)
+Uso: Panel de maestro - ver histórico de un grupo
+
+GET https://projectoasistencia.onrender.com/api/asistencias?id_asignacion=1
+Descripción: Filtrar por asignación específica
+
+GET https://projectoasistencia.onrender.com/api/asistencias?fecha=2025-10-15
+Descripción: Filtrar por fecha
+
+GET https://projectoasistencia.onrender.com/api/asistencias?id_alumno=1
+Descripción: Filtrar por alumno
+
+GET https://projectoasistencia.onrender.com/api/asistencias/lista-alumnos?id_asignacion=1
+Descripción: Obtener lista de alumnos para tomar asistencia
+Uso: Preparar interfaz de toma de lista
+
+POST https://projectoasistencia.onrender.com/api/asistencias/registrar
+Descripción: Registrar asistencia de múltiples alumnos (IMPORTANTE - Panel Maestro)
+Body:
+{
+  "id_asignacion": 1,
+  "fecha": "2025-10-15",
+  "asistencias": [
+    {
+      "id_alumno": 1,
+      "estado": "asistencia",
+      "observaciones": null
+    },
+    {
+      "id_alumno": 2,
+      "estado": "falta",
+      "observaciones": null
+    }
+  ]
+}
+Respuesta:
+{
+  "success": true,
+  "message": "Asistencias registradas exitosamente",
+  "data": {
+    "registradas": 2,
+    "fecha": "2025-10-15"
+  }
+}
+
+Estados válidos: "asistencia", "falta", "justificante"
+
+
+================================================================================
+👤 USUARIOS DEL SISTEMA (Admin y Prefectos)
+================================================================================
+
+GET /api/usuarios
+Descripción: Obtener usuarios del sistema (admin/prefecto)
+
+GET /api/usuarios/:id
+Descripción: Obtener un usuario específico
+
+POST /api/usuarios
+Descripción: Crear un usuario (admin o prefecto)
+Body:
+{
+  "nombreUsuario": "prefecto1",
+  "contrasena": "123456",
+  "tipoUsuario": "prefecto",
+  "nombre": "Juan Pérez"
+}
+Nota: Los campos deben ser en camelCase (nombreUsuario, tipoUsuario)
+El campo "nombre" es requerido para prefectos
+
+PUT /api/usuarios/:id
+Descripción: Actualizar un usuario
+Body: Igual que POST
+
+DELETE /api/usuarios/:id
+Descripción: Eliminar un usuario
+
+
+================================================================================
+📊 PORTAL DE PREFECTOS - DASHBOARD
+================================================================================
+
+GET /api/prefectos/tendencia-asistencia?dias=30
+Descripción: Obtener tendencia de asistencia general
+Parámetros opcionales:
+  - dias: Periodo a analizar (default: 30)
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "fecha": "2025-10-15",
+      "porcentaje_asistencia": 85.5,
+      "total_registros": 120,
+      "asistencias": 103,
+      "faltas": 17
+    }
+  ]
+}
+
+GET /api/prefectos/ranking-grupos?limite=10
+Descripción: Obtener ranking de grupos por asistencia
+Parámetros opcionales:
+  - limite: Número de grupos a mostrar (default: 10)
+  - orden: 'DESC' para mejores, 'ASC' para peores
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_grupo": 5,
+      "nombre_grupo": "502",
+      "carrera": "ISC",
+      "semestre": "5",
+      "porcentaje_asistencia": 92.5,
+      "total_alumnos": 30
+    }
+  ]
+}
+
+GET /api/prefectos/alertas?dias=7
+Descripción: Obtener alertas de asistencia
+Parámetros opcionales:
+  - dias: Periodo a analizar (default: 7)
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "tipo": "alumno",
+      "prioridad": "alta",
+      "mensaje": "Juan Pérez tiene 5 faltas en los últimos 7 días",
+      "id_alumno": 1,
+      "id_grupo": 5
+    }
+  ]
+}
+
+GET /api/prefectos/grupos-excelentes?periodo=30
+Descripción: Obtener grupos con excelente asistencia (≥ 90%)
+Parámetros opcionales:
+  - periodo: Días a analizar (default: 30)
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_grupo": 5,
+      "nombre_grupo": "502",
+      "carrera": "Ingeniería en Sistemas",
+      "semestre": "5",
+      "porcentaje_asistencia": 95.5,
+      "total_clases": 45,
+      "asistencias": 43
+    }
+  ]
+}
+
+GET /api/prefectos/grupos-criticos?periodo=30
+Descripción: Obtener grupos con baja asistencia (< 70%)
+Parámetros opcionales:
+  - periodo: Días a analizar (default: 30)
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_grupo": 3,
+      "nombre_grupo": "302",
+      "carrera": "Ingeniería Industrial",
+      "semestre": "3",
+      "porcentaje_asistencia": 65.2,
+      "total_clases": 40,
+      "asistencias": 26
+    }
+  ]
+}
+
+
+================================================================================
+📊 PORTAL DE PREFECTOS - ALUMNOS PROBLEMÁTICOS
+================================================================================
+
+GET /api/prefectos/alumnos-problematicos
+Descripción: Obtener lista de alumnos con problemas de asistencia
+Parámetros opcionales (query):
+  - periodo: Días a analizar (default: 30)
+  - minimo_faltas: Mínimo de faltas para considerar (default: 3)
+  - id_carrera: Filtrar por carrera
+  - id_semestre: Filtrar por semestre
+  - id_grupo: Filtrar por grupo
+  - nombre: Buscar por nombre
+Ejemplo: GET /api/prefectos/alumnos-problematicos?periodo=30&minimo_faltas=5&id_carrera=1
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_alumno": 1,
+      "matricula": "2023001",
+      "nombre_completo": "Juan Pérez López",
+      "grupo": "502",
+      "carrera": "ISC",
+      "semestre": "5",
+      "total_faltas": 8,
+      "total_asistencias": 12,
+      "total_justificantes": 1,
+      "porcentaje_asistencia": 60.0
+    }
+  ]
+}
+
+GET /api/prefectos/alumno/:id?periodo=30
+Descripción: Obtener detalle completo de un alumno
+Parámetros opcionales:
+  - periodo: Días a analizar (default: 30)
+Ejemplo: GET /api/prefectos/alumno/1?periodo=30
+Respuesta:
+{
+  "success": true,
+  "data": {
+    "info_alumno": { ... },
+    "estadisticas": {
+      "total_faltas": 8,
+      "total_asistencias": 12,
+      "porcentaje_asistencia": 60.0
+    },
+    "historico": [ ... ],
+    "faltas_por_materia": [ ... ]
+  }
+}
+
+POST /api/prefectos/atencion-alumno
+Descripción: Marcar un alumno como atendido
+Body:
+{
+  "id_alumno": 1,
+  "notas": "Reunión con padres programada"
+}
+Respuesta:
+{
+  "success": true,
+  "message": "Atención registrada exitosamente",
+  "data": {
+    "id_atencion": 5,
+    "fecha_atencion": "2025-10-23"
+  }
+}
+
+GET /api/prefectos/atencion-alumno/:id
+Descripción: Verificar si un alumno ha sido atendido
+Ejemplo: GET /api/prefectos/atencion-alumno/1
+Respuesta:
+{
+  "success": true,
+  "atendido": true,
+  "data": {
+    "id_atencion": 5,
+    "fecha_atencion": "2025-10-23",
+    "prefecto": "Juan Pérez"
+  }
+}
+
+GET /api/prefectos/alumnos-atendidos?dias=90
+Descripción: Obtener lista de alumnos que han sido atendidos
+Parámetros opcionales:
+  - dias: Periodo a consultar (default: 90)
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_alumno": 1,
+      "ultima_atencion": "2025-10-23",
+      "prefecto": "Juan Pérez"
+    }
+  ]
+}
+
+DELETE /api/prefectos/atencion-alumno/:id
+Descripción: Desmarcar un alumno como atendido
+Ejemplo: DELETE /api/prefectos/atencion-alumno/1
+Respuesta:
+{
+  "success": true,
+  "message": "Registro de atención eliminado"
+}
+
+
+================================================================================
+📊 PORTAL DE PREFECTOS - MAESTROS
+================================================================================
+
+GET /api/prefectos/maestros-problematicos
+Descripción: Obtener maestros con bajo cumplimiento de registro
+Parámetros opcionales (query):
+  - periodo: Días a analizar (default: 30)
+  - minimo_cumplimiento: % mínimo de cumplimiento (default: 80)
+  - limite: Número de resultados (default: 20)
+Ejemplo: GET /api/prefectos/maestros-problematicos?periodo=30&minimo_cumplimiento=70
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_maestro": 3,
+      "nombre_completo": "Luis Ramírez García",
+      "total_clases_programadas": 20,
+      "total_registros": 15,
+      "porcentaje_cumplimiento": 75.0,
+      "materias_impartidas": 2,
+      "grupos_asignados": 3
+    }
+  ]
+}
+
+GET /api/prefectos/maestro/:id?periodo=30
+Descripción: Obtener detalle completo de un maestro
+Parámetros opcionales:
+  - periodo: Días a analizar (default: 30)
+Ejemplo: GET /api/prefectos/maestro/3?periodo=30
+Respuesta:
+{
+  "success": true,
+  "data": {
+    "info_maestro": { ... },
+    "estadisticas": {
+      "total_clases_programadas": 20,
+      "total_registros": 15,
+      "porcentaje_cumplimiento": 75.0
+    },
+    "asignaciones": [ ... ],
+    "registros_recientes": [ ... ]
+  }
+}
+
+GET /api/prefectos/maestros-historico
+Descripción: Buscar registros históricos de asistencia de maestros
+Parámetros opcionales (query):
+  - fecha_inicio: Fecha de inicio (YYYY-MM-DD)
+  - fecha_fin: Fecha de fin (YYYY-MM-DD)
+  - id_maestro: Filtrar por maestro específico
+  - id_grupo: Filtrar por grupo específico
+  - id_materia: Filtrar por materia específica
+Ejemplo: GET /api/prefectos/maestros-historico?fecha_inicio=2025-10-01&fecha_fin=2025-10-23
+Respuesta:
+{
+  "success": true,
+  "data": [
+    {
+      "id_asistencia": 1,
+      "fecha": "2025-10-15",
+      "maestro": "Luis Ramírez García",
+      "grupo": "502",
+      "materia": "Bases de Datos",
+      "total_alumnos": 30,
+      "asistencias": 25,
+      "faltas": 5,
+      "porcentaje": 83.3
+    }
+  ]
+}
+
+
+================================================================================
+📊 VISUALIZACIÓN Y ESTADÍSTICAS
+================================================================================
+
+GET /api/estructura?idCarrera=1&idSemestre=3&idGrupo=5
+Descripción: Obtener estructura del sistema (carreras, grupos, alumnos)
+Todos los parámetros son opcionales
+
+GET /api/estadisticas/grupo?id_grupo=5&fecha_inicio=2025-01-01&fecha_fin=2025-12-31
+Descripción: Obtener estadísticas de asistencia de un grupo
+
+
+================================================================================
+💡 TIPS IMPORTANTES
+================================================================================
+
+1. AUTENTICACIÓN CON SESIONES:
+   - Todas las peticiones usan cookies de sesión
+   - Incluir { credentials: 'include' } en fetch()
+   - La sesión expira después de inactividad
+   - Verificar sesión periódicamente con GET /api/session
+
+2. FILTROS EN CASCADA (Carrera → Semestre → Grupo):
+   - Primero: GET /api/carreras
+   - Luego: GET /api/semestres?id_carrera=X
+   - Luego: GET /api/grupos?id_carrera=X&id_semestre=Y
+
+3. MATERIAS POR SEMESTRE (para asignaciones):
+   - Usar: GET /api/plan-estudios/materias/:idCarrera/:idSemestre
+   - Esto asegura que solo se muestren materias del semestre del grupo
+
+4. TOMA DE ASISTENCIA (flujo completo):
+   a) GET /api/asignaciones?id_maestro=X  (grupos del maestro)
+   b) GET /api/alumnos/grupo/Y            (alumnos del grupo)
+   c) POST /api/asistencias/registrar     (guardar asistencias)
+
+5. HORARIOS DISPONIBLES (para asignaciones):
+   - Usar: GET /api/horarios/disponibles?id_grupo=X&id_maestro=Y
+   - Esto evita conflictos de horarios
+
+6. FORMATO DE DATOS:
+   - Fechas: "YYYY-MM-DD" (ejemplo: "2025-10-15")
+   - Horas: "HH:MM:SS" (ejemplo: "08:30:00")
+   - Fotos: Base64 con prefijo "data:image/jpeg;base64,..."
+
+7. TIPOS DE USUARIOS:
+   - "admin": Administrador del sistema
+   - "maestro": Docente que imparte clases
+   - "prefecto": Personal administrativo
+
+8. ESTADOS DE ASISTENCIA:
+   - "asistencia": El alumno asistió
+   - "falta": El alumno no asistió
+   - "justificante": El alumno tiene justificación
+
+9. CIERRE DE SESIÓN:
+   - Siempre usar sessionStorage.setItem('loggingOut', 'true')
+   - Llamar a POST /api/logout
+   - Limpiar localStorage
+   - Redirigir a /
+
+================================================================================
+🔄 FLUJOS COMUNES
+================================================================================
+
+FLUJO 1: REGISTRAR UN ALUMNO
+1. GET /api/carreras                    → Seleccionar carrera
+2. GET /api/semestres?id_carrera=X     → Seleccionar semestre
+3. GET /api/grupos?id_carrera=X&id_semestre=Y  → Seleccionar grupo
+4. POST /api/alumnos                   → Guardar alumno
+
+FLUJO 2: CREAR UNA ASIGNACIÓN (Asignar maestro a grupo)
+1. GET /api/carreras                   → Seleccionar carrera
+2. GET /api/grupos?id_carrera=X        → Seleccionar grupo
+3. GET /api/plan-estudios/materias/X/Y → Materias del semestre del grupo
+4. GET /api/maestros                   → Seleccionar maestro
+5. GET /api/horarios/disponibles?id_grupo=G&id_maestro=M → Horarios libres
+6. POST /api/asignaciones              → Crear asignación
+
+FLUJO 3: TOMAR ASISTENCIA (Panel Maestro)
+1. Login del maestro
+2. GET /api/asignaciones?id_maestro=X  → Obtener grupos y materias
+3. Seleccionar grupo → Filtrar materias del array
+4. GET /api/alumnos/grupo/Y            → Cargar lista de alumnos
+5. Marcar asistencias en interfaz
+6. POST /api/asistencias/registrar     → Guardar todas las asistencias
+
+FLUJO 4: VER HISTÓRICO DE ASISTENCIAS
+1. GET /api/asignaciones?id_maestro=X  → Obtener grupos del maestro
+2. Seleccionar grupo
+3. GET /api/asistencias?id_grupo=Y     → Obtener histórico
+4. Filtrar por fechas en frontend (opcional)
+
+FLUJO 5: DASHBOARD DE PREFECTO
+1. Login como prefecto
+2. GET /api/prefectos/tendencia-asistencia?dias=30 → Gráfica de tendencia
+3. GET /api/prefectos/ranking-grupos?limite=10 → Top/Bottom grupos
+4. GET /api/prefectos/alertas?dias=7 → Alertas recientes
+5. GET /api/prefectos/grupos-excelentes → Grupos con >90%
+6. GET /api/prefectos/grupos-criticos → Grupos con <70%
+
+FLUJO 6: ALUMNOS PROBLEMÁTICOS (Prefecto)
+1. GET /api/prefectos/alumnos-problematicos?periodo=30&minimo_faltas=5
+2. GET /api/prefectos/alumnos-atendidos → Verificar atendidos
+3. Seleccionar alumno → GET /api/prefectos/alumno/:id
+4. Marcar como atendido → POST /api/prefectos/atencion-alumno
+5. Generar citatorio (frontend con jsPDF)
+
+FLUJO 7: MAESTROS PROBLEMÁTICOS (Prefecto)
+1. GET /api/prefectos/maestros-problematicos?periodo=30
+2. Seleccionar maestro → GET /api/prefectos/maestro/:id
+3. Ver histórico → GET /api/prefectos/maestros-historico?id_maestro=X
+4. Generar reporte (frontend con jsPDF)
+
+FLUJO 8: CERRAR SESIÓN (Cualquier usuario)
+1. sessionStorage.setItem('loggingOut', 'true')
+2. POST /api/logout → Cerrar en servidor
+3. localStorage.removeItem('user')
+4. Redirigir a /
+
+================================================================================
+⚠️ VALIDACIONES Y RESTRICCIONES
+================================================================================
+
+1. No se puede eliminar una carrera si tiene semestres, materias o grupos
+2. No se puede eliminar un semestre si tiene registros en plan de estudios o grupos
+3. No se puede eliminar una materia si tiene asignaciones activas
+4. No se puede eliminar un grupo si tiene alumnos asignados
+5. No se puede eliminar un maestro si tiene asignaciones de materias
+6. No se puede eliminar un alumno si tiene registros de asistencia
+7. Un horario no puede estar ocupado por el mismo grupo o maestro dos veces
+8. Las materias solo se pueden asignar si están en el plan de estudios del semestre
+9. Todos los endpoints de prefectos requieren autenticación con rol "prefecto"
+10. Las sesiones expiran después de 24 horas de inactividad
+
+================================================================================
+📱 ENDPOINTS ESPECÍFICOS PARA PANEL DE MAESTRO
+================================================================================
+
+CARGAR GRUPOS ASIGNADOS:
+GET /api/asignaciones?id_maestro={id_maestro}
+Devuelve:
+- Todos los grupos donde el maestro imparte clases
+- Materias que imparte en cada grupo
+- Horarios de cada materia
+
+CARGAR ALUMNOS PARA PASAR LISTA:
+GET /api/alumnos/grupo/{id_grupo}
+Devuelve:
+- Lista completa de alumnos del grupo
+- Incluye fotos en Base64
+- Información de carrera y semestre
+
+GUARDAR ASISTENCIAS:
+POST /api/asistencias/registrar
+Body:
+{
+  "id_asignacion": 1,
+  "fecha": "2025-10-15",
+  "asistencias": [
+    {"id_alumno": 1, "estado": "asistencia", "observaciones": null},
+    {"id_alumno": 2, "estado": "falta", "observaciones": null},
+    {"id_alumno": 3, "estado": "justificante", "observaciones": "Cita médica"}
+  ]
+}
+
+VER HISTÓRICO:
+GET /api/asistencias?id_grupo={id_grupo}
+Devuelve:
+- Todos los registros de asistencia del grupo
+- Se puede filtrar por fecha en frontend
+
+================================================================================
+📱 ENDPOINTS ESPECÍFICOS PARA PORTAL DE PREFECTOS
+================================================================================
+
+DASHBOARD:
+- GET /api/prefectos/tendencia-asistencia
+- GET /api/prefectos/ranking-grupos
+- GET /api/prefectos/alertas
+- GET /api/prefectos/grupos-excelentes
+- GET /api/prefectos/grupos-criticos
+
+ALUMNOS PROBLEMÁTICOS:
+- GET /api/prefectos/alumnos-problematicos (con filtros)
+- GET /api/prefectos/alumno/:id (detalle completo)
+- POST /api/prefectos/atencion-alumno (marcar atendido)
+- GET /api/prefectos/atencion-alumno/:id (verificar estado)
+- GET /api/prefectos/alumnos-atendidos (lista de atendidos)
+- DELETE /api/prefectos/atencion-alumno/:id (desmarcar)
+
+MAESTROS:
+- GET /api/prefectos/maestros-problematicos (con filtros)
+- GET /api/prefectos/maestro/:id (detalle completo)
+- GET /api/prefectos/maestros-historico (búsqueda histórica)
+
+TODAS REQUIEREN:
+- Autenticación con rol "prefecto"
+- credentials: 'include' en fetch()
+- Sesión activa en el servidor
+
+================================================================================
+🎨 RESPUESTAS ESTÁNDAR
+================================================================================
+
+ÉXITO (200-201):
+{
+  "success": true,
+  "message": "Operación exitosa",
+  "data": { ... }
+}
+
+ERROR (400-500):
+{
+  "error": "Mensaje de error descriptivo"
+}
+
+VALIDACIÓN (400):
+{
+  "error": "Los siguientes campos son requeridos: nombreUsuario, tipoUsuario"
+}
+
+NO AUTORIZADO (401):
+{
+  "error": "No autorizado",
+  "requireLogin": true
+}
+
+SESIÓN EXPIRADA (401):
+{
+  "error": "Sesión expirada o inválida",
+  "requireLogin": true
+}
+
+================================================================================
+📝 NOTAS ADICIONALES
+================================================================================
+
+1. Todos los endpoints están en el archivo: router/apiRouter.js
+2. La lógica de base de datos está en: modules/model.js
+3. Los middlewares de validación están en: utils/middleware.js
+4. Autenticación de sesiones: utils/middleware.js (requireAuth, requirePrefecto)
+
+5. Convenciones de nombres:
+   - Backend: snake_case (nombre_carrera, id_grupo)
+   - Frontend-Backend Usuario: camelCase (nombreUsuario, tipoUsuario)
+
+6. IDs siempre son números enteros positivos
+
+7. Las fechas deben estar en formato ISO: YYYY-MM-DD
+
+8. Los campos marcados como "IMPORTANTE" son los más usados en el sistema
+
+9. PERSISTENCIA DE DATOS:
+   - Atención de alumnos: Tabla Atenciones_Alumnos
+   - Sesiones: express-session con MemoryStore
+   - NO usar localStorage para datos críticos
+
+10. DEBUGGING:
+    - Todos los console.log han sido removidos en producción
+    - Para debugging, verificar req.session.user en servidor
+    - Frontend: sessionStorage.getItem('loggingOut')
+
+================================================================================
+🔒 SEGURIDAD Y MEJORES PRÁCTICAS
+================================================================================
+
+1. SIEMPRE usar { credentials: 'include' } en fetch()
+2. Verificar sesión con GET /api/session antes de operaciones críticas
+3. Implementar manejo de errores 401 para redirigir a login
+4. Limpiar sessionStorage.loggingOut después de usarlo
+5. NO almacenar contraseñas en localStorage
+6. Validar todos los parámetros numéricos con validateNumericId
+7. Usar middleware requireAuth en rutas protegidas
+8. Verificar roles de usuario antes de operaciones sensibles
+9. Sanitizar entradas del usuario en el backend
+10. Implementar rate limiting para prevenir abuso de API
+
+================================================================================
+📦 TABLAS DE BASE DE DATOS RELACIONADAS
+================================================================================
+
+PRINCIPALES:
+- Carreras
+- Semestres
+- Materias
+- Plan_Estudios
+- Grupos
+- Alumnos
+- Maestros
+- Horarios
+- Asignaciones
+- Asistencias
+- Usuarios_Sistema
+- Atenciones_Alumnos (NUEVA - para persistencia de atención)
+
+ESTRUCTURA DE Atenciones_Alumnos:
+- id_atencion (PK)
+- id_alumno (FK → Alumnos)
+- id_prefecto (FK → Usuarios_Sistema)
+- fecha_atencion (DATETIME)
+- notas (TEXT, opcional)
+
+================================================================================
+Última actualización: 2025-10-23
+Versión: 2.0
+================================================================================

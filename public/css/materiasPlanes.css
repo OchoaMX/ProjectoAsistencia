@@ -1,0 +1,287 @@
+/* Estilos para Materias y Plan de Estudios Unificado */
+
+.section-title {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.filter-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.filter-section .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.filter-section .form-group {
+    margin: 0;
+}
+
+.filter-section label {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.filter-section select {
+    background: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.filter-section select:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+}
+
+/* Contenedor del Plan de Estudios */
+#planEstudiosContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 25px;
+    margin-top: 25px;
+}
+
+/* Tarjeta de Carrera */
+.carrera-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease;
+}
+
+.carrera-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.carrera-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.carrera-header h3 {
+    color: #667eea;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Semestres dentro de cada carrera */
+.semestres-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.semestre-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 15px;
+    border-left: 4px solid #4CAF50;
+}
+
+.semestre-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.semestre-header h4 {
+    color: #2c3e50;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.semestre-badge {
+    background: #4CAF50;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Lista de materias */
+.materias-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.materia-item {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 3px solid #667eea;
+    transition: all 0.2s ease;
+}
+
+.materia-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.materia-info {
+    flex: 1;
+}
+
+.materia-info strong {
+    display: block;
+    color: #2c3e50;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.materia-codigo {
+    display: inline-block;
+    background: #667eea;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+.materia-descripcion {
+    color: #6c757d;
+    font-size: 13px;
+    font-style: italic;
+    margin-top: 4px;
+}
+
+.materia-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-editar-mini {
+    background: #17a2b8;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.btn-editar-mini:hover {
+    background: #138496;
+    transform: scale(1.1);
+}
+
+.btn-eliminar-mini {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.btn-eliminar-mini:hover {
+    background: #c82333;
+    transform: scale(1.1);
+}
+
+.semestre-footer {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+    color: #6c757d;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Estados vacíos */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.no-materias {
+    color: #6c757d;
+    font-style: italic;
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #planEstudiosContainer {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-section .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .carrera-card {
+        padding: 15px;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.carrera-card {
+    animation: fadeIn 0.5s ease;
+}

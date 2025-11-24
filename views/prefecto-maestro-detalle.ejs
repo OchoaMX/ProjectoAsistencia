@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Prefectos - Detalle de Maestro</title>
+    <link rel="stylesheet" href="/css/<%= cssFile %>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/js/auth-common.js"></script>
+</head>
+<body>
+    <div class="prefecto-container">
+        <!-- Header -->
+        <header class="prefecto-header">
+            <div class="prefecto-header-content">
+                <div class="prefecto-title">
+                    <i class="fas fa-school icon"></i>
+                    PORTAL DE PREFECTOS - Sistema de Asistencia Escolar
+                </div>
+                <div class="prefecto-user-info">
+                    <span class="prefecto-user-name">
+                        <i class="fas fa-user-circle"></i>
+                        <%= user ? user.nombre : 'Usuario del Sistema' %>
+                    </span>
+                    <button onclick="cerrarSesion()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegación -->
+        <nav class="prefecto-nav">
+            <div class="prefecto-nav-content">
+                <a href="/prefecto/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/prefecto/alumnos-problematicos" class="nav-link">
+                    <i class="fas fa-user-times"></i>
+                    Alumnos Problemáticos
+                </a>
+                <a href="/prefecto/maestros-control" class="nav-link">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Control Maestros
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="prefecto-main">
+            <!-- Header con botón de regreso -->
+            <div class="prefecto-date-header fade-in">
+                <div class="flex items-center gap-2">
+                    <a href="/prefecto/maestros-control" class="action-btn ghost">
+                        <i class="fas fa-arrow-left"></i>
+                        Regresar
+                    </a>
+                    <div class="current-date">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>PERFIL DE MAESTRO</span>
+                    </div>
+                </div>
+                <div class="panel-actions">
+                    <select id="periodoAnalisis" class="filter-select" onchange="updatePeriodo()">
+                        <option value="7">Última semana</option>
+                        <option value="15">Últimas 2 semanas</option>
+                        <option value="30" selected>Último mes</option>
+                        <option value="60">Últimos 2 meses</option>
+                    </select>
+                    <button class="action-btn primary" onclick="generarReporte()">
+                        <i class="fas fa-file-pdf"></i>
+                        Generar Reporte PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Información básica del maestro -->
+            <div class="panel fade-in">
+                <div class="panel-content">
+                    <div class="teacher-profile">
+                        <div class="profile-info">
+                            <h2 id="maestroNombre" class="loading-text">Cargando...</h2>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">Usuario:</span>
+                                    <span id="maestroUsuario" class="info-value">...</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Estado:</span>
+                                    <span id="maestroEstado" class="info-value">...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estadísticas de registro -->
+                        <div class="stats-overview">
+                            <h3 class="stats-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Estadísticas de Registro (Últimos 30 días)
+                            </h3>
+                            <div class="metrics-grid">
+                                <div class="metric-card primary">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Clases Programadas</span>
+                                        <i class="fas fa-calendar metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="clasesProgramadas">0</div>
+                                </div>
+                                <div class="metric-card success">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Registradas</span>
+                                        <i class="fas fa-check-circle metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="clasesRegistradas">0</div>
+                                </div>
+                                <div class="metric-card danger">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Sin Registro</span>
+                                        <i class="fas fa-times-circle metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="clasesSinRegistro">0</div>
+                                </div>
+                                <div class="metric-card warning">
+                                    <div class="metric-header">
+                                        <span class="metric-title">% Cumplimiento</span>
+                                        <i class="fas fa-percentage metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="porcentajeCumplimiento">0%</div>
+                                    <div class="metric-percentage" id="estadoCumplimiento">
+                                        <!-- Se actualiza dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Materias y grupos asignados -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-books"></i>
+                        Materias y Grupos Asignados
+                    </h2>
+                </div>
+                <div class="panel-content">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Materia</th>
+                                    <th>Grupo</th>
+                                    <th>Horario</th>
+                                    <th>Clases Program.</th>
+                                    <th>Registros</th>
+                                    <th>% Registro</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMaterias">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de contenido adicional -->
+            <div class="content-grid two-columns">
+                <!-- Gráfica de cumplimiento -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-chart-line"></i>
+                            Tendencia de Cumplimiento
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="chart-container large">
+                            <canvas id="cumplimientoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de registros faltantes -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Registros Faltantes Recientes
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="historial-container" id="historialFaltantes">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                        <div class="text-center mt-4">
+                            <button class="action-btn ghost" onclick="verHistorialCompleto()">
+                                <i class="fas fa-list"></i>
+                                Ver Historial Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generar Reporte PDF -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-file-pdf"></i>
+                        Reporte de Desempeño
+                    </h2>
+                </div>
+                <div class="panel-content">
+                    <div class="content-grid one-column">
+                        <button class="action-card primary" onclick="generarReporte()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Generar Reporte PDF</h4>
+                                <p>Crear reporte profesional en PDF con estadísticas detalladas del desempeño del maestro</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de métricas adicionales -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-analytics"></i>
+                        Análisis Comparativo
+                    </h2>
+                </div>
+                <div class="panel-content">
+                    <div class="content-grid three-columns">
+                        <div class="metric-card info">
+                            <div class="metric-header">
+                                <span class="metric-title">Promedio Institucional</span>
+                                <i class="fas fa-school metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="promedioInstitucional">85%</div>
+                        </div>
+                        
+                        <div class="metric-card primary">
+                            <div class="metric-header">
+                                <span class="metric-title">Ranking</span>
+                                <i class="fas fa-trophy metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="rankingMaestro">#15</div>
+                            <div class="metric-percentage neutral">
+                                de 45 maestros
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card success">
+                            <div class="metric-header">
+                                <span class="metric-title">Mejora vs Mes Anterior</span>
+                                <i class="fas fa-trending-up metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="mejoraMensual">+5%</div>
+                            <div class="metric-percentage positive">
+                                <i class="fas fa-arrow-up"></i>
+                                Mejorando
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden">
+        <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                Cargando información del maestro...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pasar el ID del maestro al JavaScript
+        window.maestroId = <%= maestroId %>;
+    </script>
+    <script src="/js/auth-utils.js"></script>
+    <script src="/js/<%= jsFile %>"></script>
+    
+    <style>
+        /* Estilos específicos para el detalle de maestro */
+        .teacher-profile {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 1rem 0;
+            color: var(--color-gray-800);
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+        }
+
+        .stats-overview {
+            background: var(--color-gray-50);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+
+        .stats-title {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .historial-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .missing-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-gray-200);
+            align-items: center;
+        }
+
+        .missing-item:last-child {
+            border-bottom: none;
+        }
+
+        .missing-date {
+            font-weight: 600;
+            color: var(--color-gray-600);
+            white-space: nowrap;
+            font-size: 0.875rem;
+        }
+
+        .missing-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .missing-subject {
+            font-weight: 600;
+            color: var(--color-gray-800);
+        }
+
+        .missing-group {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        .missing-time {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+        }
+
+        .action-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-card.primary {
+            border-color: var(--color-primary);
+        }
+
+        .action-card.primary:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .action-card.warning {
+            border-color: var(--color-warning);
+        }
+
+        .action-card.warning:hover {
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .action-card.success {
+            border-color: var(--color-success);
+        }
+
+        .action-card.success:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-card.primary .action-icon {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--color-primary);
+        }
+
+        .action-card.warning .action-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+
+        .action-card.success .action-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+
+        .action-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .action-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        .content-grid.one-column {
+            grid-template-columns: 1fr;
+        }
+
+        .loading-text {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .teacher-profile {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .missing-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>

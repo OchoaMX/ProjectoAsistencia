@@ -1,0 +1,31 @@
+<%- include('partials/header', { 
+    title: 'Visualizar Datos - Panel de Administración',
+    currentPage: 'visualizar',
+    cssFile: 'visualizar.css',
+    jsFile: 'visualizar.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Visualizar Datos del Sistema</h2>
+    
+    <div class="view-controls">
+        <select id="viewCarrera">
+            <option value="">Todas las carreras</option>
+        </select>
+        <select id="viewSemestre">
+            <option value="">Todos los semestres</option>
+        </select>
+        <select id="viewGrupo">
+            <option value="">Todos los grupos</option>
+        </select>
+        <button class="btn-primary" onclick="consultarEstructura()">
+            <i class="fas fa-search"></i> Consultar
+        </button>
+    </div>
+
+    <div id="viewResults">
+        <div id="estructuraTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'visualizar.js' }) %>

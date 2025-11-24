@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asistencia - Panel Docente</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/maestro.css">
+</head>
+<body>
+    <nav class="navbar">
+        <h1><i class="fas fa-chalkboard-teacher"></i> Panel Docente</h1>
+        <div class="user-info">
+            <span id="userName">Usuario: </span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alerts"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('asistencia')">Registro de Asistencia</button>
+            <button class="tab" onclick="showTab('historico')">Historial</button>
+        </div>
+
+        <!-- Tab Registro de Asistencia -->
+        <div id="asistencia" class="tab-content active">
+            <h2 class="section-title">Registro de Asistencia</h2>
+            
+            <div id="infoDiaFiltro" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: 500; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                <i class="fas fa-calendar-day"></i> <span id="textoDiaFiltro">Cargando...</span>
+            </div>
+            
+            <div class="view-controls">
+                <select id="selectGrupo" onchange="cargarMateriasGrupo()">
+                    <option value="">Seleccionar grupo...</option>
+                </select>
+                <select id="selectMateria" onchange="cargarAlumnosGrupo()">
+                    <option value="">Seleccionar materia...</option>
+                </select>
+                <input type="date" id="fechaAsistencia" value="" onchange="actualizarFiltroFecha()">
+            </div>
+            
+            <div id="registroAsistenciaContainer" class="hidden">
+                <h3>Lista de Alumnos</h3>
+                <form id="formAsistencia">
+                    <div id="listaAlumnos"></div>
+                    <button type="submit" class="btn-primary" style="max-width: 300px; margin-top: 20px;">
+                        <i class="fas fa-save"></i> Guardar Asistencia
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tab Historial -->
+        <div id="historico" class="tab-content">
+            <h2 class="section-title">Historial de Asistencias</h2>
+            
+            <div id="infoDiaFiltroHistorico" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-weight: 500; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                <i class="fas fa-calendar-day"></i> <span id="textoDiaFiltroHistorico">Selecciona una fecha para consultar</span>
+            </div>
+            
+            <div class="view-controls">
+                <select id="selectGrupoHistorico" onchange="cargarMateriasHistorico()">
+                    <option value="">Seleccionar grupo...</option>
+                </select>
+                <select id="selectMateriaHistorico">
+                    <option value="">Seleccionar materia...</option>
+                </select>
+                <input type="date" id="fechaHistorico" value="" onchange="actualizarFiltroFechaHistorico()">
+                <button class="btn-primary" onclick="cargarHistorico()">
+                    <i class="fas fa-search"></i> Consultar
+                </button>
+            </div>
+            
+            <div id="historicoContainer">
+                <h3>Registro de Asistencias</h3>
+                <div id="historicoTable"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let maestroId;
+        let asignacionesDocente = [];
+        
+        // Función para obtener la fecha actual en zona horaria local (formato YYYY-MM-DD)
+        function obtenerFechaLocal() {
+            const ahora = new Date();
+            const año = ahora.getFullYear();
+            const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+            const dia = String(ahora.getDate()).padStart(2, '0');
+            return `${año}-${mes}-${dia}`;
+        }
+        
+        // Función para obtener el día de la semana en español
+        function obtenerDiaSemana(fecha = new Date()) {
+            const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            return dias[fecha.getDay()];
+        }
+        
+        // Cargar datos al inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticación
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!user.id || user.tipoUsuario !== 'maestro') {
+                window.location.href = '/';
+                return;
+            }
+            
+            maestroId = user.id;
+            document.getElementById('userName').textContent = `Usuario: ${user.nombre || 'Docente'}`;
+            
+            // Establecer fecha actual en los campos de fecha (usando fecha local)
+            const today = obtenerFechaLocal();
+            document.getElementById('fechaAsistencia').value = today;
+            document.getElementById('fechaHistorico').value = today;
+            
+            // Actualizar indicador de día
+            actualizarIndicadorDia();
+            
+            // Cargar grupos del docente
+            cargarGruposDocente();
+        });
+        
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Reiniciar combo boxes y limpiar contenido según la pestaña
+            if (tabName === 'asistencia') {
+                // Reiniciar selectores de registro de asistencia
+                document.getElementById('selectGrupo').value = '';
+                document.getElementById('selectMateria').innerHTML = '<option value="">Seleccionar materia...</option>';
+                const today = obtenerFechaLocal();
+                document.getElementById('fechaAsistencia').value = today;
+                document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+                
+                // Actualizar indicador y recargar grupos
+                actualizarIndicadorDia();
+                cargarGruposDocente();
+            } else if (tabName === 'historico') {
+                // Reiniciar selectores de historial
+                document.getElementById('selectGrupoHistorico').value = '';
+                document.getElementById('selectMateriaHistorico').innerHTML = '<option value="">Seleccionar materia...</option>';
+                const today = obtenerFechaLocal();
+                document.getElementById('fechaHistorico').value = today;
+                document.getElementById('historicoTable').innerHTML = '';
+                
+                // Actualizar indicador y cargar grupos del día
+                actualizarIndicadorDiaHistorico();
+                cargarGruposHistorico();
+            }
+        }
+        
+        function showAlert(message, type) {
+            const alertsDiv = document.getElementById('alerts');
+            alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            // Las alertas de warning duran más tiempo
+            const timeout = type === 'warning' ? 5000 : 3000;
+            
+            setTimeout(() => {
+                alertsDiv.innerHTML = '';
+            }, timeout);
+        }
+        
+        async function logout() {
+            try {
+                // Llamar al endpoint de logout en el servidor
+                await fetch('/api/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                // Limpiar localStorage
+                localStorage.removeItem('user');
+                
+                // Redirigir al login
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                // Aún así limpiar y redirigir
+                localStorage.removeItem('user');
+                window.location.href = '/';
+            }
+        }
+        
+        // Actualizar filtro cuando cambia la fecha
+        function actualizarFiltroFecha() {
+            // Limpiar selectores
+            document.getElementById('selectGrupo').value = '';
+            document.getElementById('selectMateria').innerHTML = '<option value="">Seleccionar materia...</option>';
+            document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+            
+            // Actualizar indicador de día
+            actualizarIndicadorDia();
+            
+            // Recargar grupos con el nuevo filtro de fecha
+            cargarGruposDocente();
+        }
+        
+        // Actualizar el indicador del día de la semana
+        function actualizarIndicadorDia() {
+            const fechaSeleccionada = document.getElementById('fechaAsistencia').value;
+            let diaTexto;
+            let fechaTexto;
+            
+            if (fechaSeleccionada) {
+                const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+                diaTexto = obtenerDiaSemana(fecha);
+                fechaTexto = fecha.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                fechaTexto = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+            } else {
+                const fecha = new Date();
+                diaTexto = obtenerDiaSemana();
+                fechaTexto = fecha.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                fechaTexto = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+            }
+            
+            document.getElementById('textoDiaFiltro').textContent = 
+                `Mostrando clases del ${fechaTexto}`;
+        }
+        
+        // Actualizar filtro de fecha en historial
+        function actualizarFiltroFechaHistorico() {
+            // Limpiar selectores
+            document.getElementById('selectGrupoHistorico').value = '';
+            document.getElementById('selectMateriaHistorico').innerHTML = '<option value="">Seleccionar materia...</option>';
+            document.getElementById('historicoTable').innerHTML = '';
+            
+            // Actualizar indicador de día
+            actualizarIndicadorDiaHistorico();
+            
+            // Recargar grupos con el nuevo filtro de fecha
+            cargarGruposHistorico();
+        }
+        
+        // Actualizar el indicador del día en historial
+        function actualizarIndicadorDiaHistorico() {
+            const fechaSeleccionada = document.getElementById('fechaHistorico').value;
+            let fechaTexto;
+            
+            if (fechaSeleccionada) {
+                const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+                fechaTexto = fecha.toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                fechaTexto = fechaTexto.charAt(0).toUpperCase() + fechaTexto.slice(1);
+                document.getElementById('textoDiaFiltroHistorico').textContent = 
+                    `Consultando clases del ${fechaTexto}`;
+            } else {
+                document.getElementById('textoDiaFiltroHistorico').textContent = 
+                    'Selecciona una fecha para consultar';
+            }
+        }
+        
+        // Cargar los grupos asignados al docente (solo para registro de asistencia)
+        async function cargarGruposDocente() {
+            try {
+                // Obtener asignaciones del maestro (solo la primera vez)
+                if (asignacionesDocente.length === 0) {
+                    const response = await fetch(`/api/asignaciones?id_maestro=${maestroId}`);
+                    
+                    if (!response.ok) {
+                        throw new Error('Error al obtener asignaciones');
+                    }
+                    
+                    asignacionesDocente = await response.json();
+                    
+                    console.log('Asignaciones del maestro:', asignacionesDocente);
+                    
+                    if (asignacionesDocente.length === 0) {
+                        showAlert('No tienes grupos asignados. Contacta al administrador.', 'error');
+                        return;
+                    }
+                }
+                
+                // Llenar selector de grupos para asistencia
+                const grupoSelect = document.getElementById('selectGrupo');
+                grupoSelect.innerHTML = '<option value="">Seleccionar grupo...</option>';
+                
+                // Obtener día de la semana de la fecha seleccionada (o actual si no hay fecha)
+                const fechaSeleccionada = document.getElementById('fechaAsistencia').value;
+                let diaFiltro;
+                
+                if (fechaSeleccionada) {
+                    const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+                    diaFiltro = obtenerDiaSemana(fecha);
+                } else {
+                    diaFiltro = obtenerDiaSemana();
+                }
+                
+                console.log('Día para filtrar (asistencia):', diaFiltro);
+                
+                // Filtrar asignaciones por día de la fecha seleccionada
+                const asignacionesDia = asignacionesDocente.filter(a => a.dia_semana === diaFiltro);
+                
+                console.log('Asignaciones para el día seleccionado:', asignacionesDia);
+                
+                // Para el selector de registro de asistencia: solo grupos con clases en el día seleccionado
+                const gruposDia = [...new Map(asignacionesDia.map(item => 
+                    [item.id_grupo, { 
+                        id_grupo: item.id_grupo, 
+                        nombre_grupo: item.nombre_grupo, 
+                        nombre_carrera: item.nombre_carrera, 
+                        numero_semestre: item.numero_semestre 
+                    }]
+                )).values()];
+                
+                if (gruposDia.length === 0) {
+                    grupoSelect.innerHTML += '<option value="" disabled>No tienes clases programadas para este día</option>';
+                } else {
+                    gruposDia.forEach(grupo => {
+                        const optionText = `${grupo.nombre_grupo} - ${grupo.nombre_carrera} (${grupo.numero_semestre}° Sem)`;
+                        grupoSelect.innerHTML += `<option value="${grupo.id_grupo}">${optionText}</option>`;
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error al cargar grupos del docente:', error);
+                showAlert('Error al cargar los grupos asignados', 'error');
+            }
+        }
+        
+        // Cargar materias del grupo seleccionado
+        function cargarMateriasGrupo() {
+            const grupoId = document.getElementById('selectGrupo').value;
+            const materiaSelect = document.getElementById('selectMateria');
+            
+            materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
+            
+            // Ocultar la lista de alumnos al cambiar de grupo
+            document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+            
+            if (!grupoId) return;
+            
+            // Obtener día de la fecha seleccionada
+            const fechaSeleccionada = document.getElementById('fechaAsistencia').value;
+            let diaFiltro;
+            
+            if (fechaSeleccionada) {
+                const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+                diaFiltro = obtenerDiaSemana(fecha);
+            } else {
+                diaFiltro = obtenerDiaSemana();
+            }
+            
+            // Filtrar por grupo Y por día de la fecha seleccionada
+            const materiasGrupo = asignacionesDocente.filter(a => 
+                a.id_grupo == grupoId && a.dia_semana === diaFiltro
+            );
+            
+            if (materiasGrupo.length === 0) {
+                materiaSelect.innerHTML += '<option value="" disabled>No tienes materias programadas este día para este grupo</option>';
+                return;
+            }
+            
+            // Ordenar por hora de inicio (ascendente: 7:00, 8:00, 9:00, etc.)
+            materiasGrupo.sort((a, b) => {
+                if (a.hora_inicio && b.hora_inicio) {
+                    return a.hora_inicio.localeCompare(b.hora_inicio);
+                }
+                return 0;
+            });
+            
+            materiasGrupo.forEach(asignacion => {
+                // Formatear la hora (mostrar solo HH:MM)
+                const horaInicio = asignacion.hora_inicio ? asignacion.hora_inicio.substring(0, 5) : '';
+                const horaFin = asignacion.hora_fin ? asignacion.hora_fin.substring(0, 5) : '';
+                const horario = horaInicio && horaFin ? ` - ${horaInicio} a ${horaFin}` : '';
+                
+                materiaSelect.innerHTML += `<option value="${asignacion.id_materia}" data-asignacion="${asignacion.id_asignacion}">${asignacion.nombre_materia} (${asignacion.codigo_materia})${horario}</option>`;
+            });
+        }
+        
+        // Cargar grupos para historial con filtro por día
+        function cargarGruposHistorico() {
+            const grupoSelect = document.getElementById('selectGrupoHistorico');
+            grupoSelect.innerHTML = '<option value="">Seleccionar grupo...</option>';
+            
+            // Obtener día de la semana de la fecha seleccionada
+            const fechaSeleccionada = document.getElementById('fechaHistorico').value;
+            
+            if (!fechaSeleccionada) {
+                grupoSelect.innerHTML += '<option value="" disabled>Selecciona primero una fecha</option>';
+                return;
+            }
+            
+            const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+            const diaFiltro = obtenerDiaSemana(fecha);
+            
+            console.log('Día para historial:', diaFiltro);
+            
+            // Filtrar asignaciones por día de la fecha seleccionada
+            const asignacionesDia = asignacionesDocente.filter(a => a.dia_semana === diaFiltro);
+            
+            // Grupos únicos con clases en el día seleccionado
+            const gruposDia = [...new Map(asignacionesDia.map(item => 
+                [item.id_grupo, { 
+                    id_grupo: item.id_grupo, 
+                    nombre_grupo: item.nombre_grupo, 
+                    nombre_carrera: item.nombre_carrera, 
+                    numero_semestre: item.numero_semestre 
+                }]
+            )).values()];
+            
+            if (gruposDia.length === 0) {
+                grupoSelect.innerHTML += '<option value="" disabled>No tienes clases programadas para este día</option>';
+            } else {
+                gruposDia.forEach(grupo => {
+                    const optionText = `${grupo.nombre_grupo} - ${grupo.nombre_carrera} (${grupo.numero_semestre}° Sem)`;
+                    grupoSelect.innerHTML += `<option value="${grupo.id_grupo}">${optionText}</option>`;
+                });
+            }
+        }
+        
+        // Cargar materias del grupo seleccionado en historial
+        function cargarMateriasHistorico() {
+            const grupoId = document.getElementById('selectGrupoHistorico').value;
+            const materiaSelect = document.getElementById('selectMateriaHistorico');
+            
+            materiaSelect.innerHTML = '<option value="">Seleccionar materia...</option>';
+            
+            if (!grupoId) return;
+            
+            // Obtener día de la fecha seleccionada en historial
+            const fechaSeleccionada = document.getElementById('fechaHistorico').value;
+            
+            if (!fechaSeleccionada) {
+                materiaSelect.innerHTML += '<option value="" disabled>Selecciona primero una fecha</option>';
+                return;
+            }
+            
+            const fecha = new Date(fechaSeleccionada + 'T00:00:00');
+            const diaFiltro = obtenerDiaSemana(fecha);
+            
+            // Filtrar por grupo Y por día de la fecha seleccionada
+            const materiasGrupo = asignacionesDocente.filter(a => 
+                a.id_grupo == grupoId && a.dia_semana === diaFiltro
+            );
+            
+            if (materiasGrupo.length === 0) {
+                materiaSelect.innerHTML += '<option value="" disabled>No tienes materias programadas este día para este grupo</option>';
+                return;
+            }
+            
+            // Ordenar por hora de inicio (ascendente: 7:00, 8:00, 9:00, etc.)
+            materiasGrupo.sort((a, b) => {
+                if (a.hora_inicio && b.hora_inicio) {
+                    return a.hora_inicio.localeCompare(b.hora_inicio);
+                }
+                return 0;
+            });
+            
+            materiasGrupo.forEach(asignacion => {
+                // Formatear la hora (mostrar solo HH:MM)
+                const horaInicio = asignacion.hora_inicio ? asignacion.hora_inicio.substring(0, 5) : '';
+                const horaFin = asignacion.hora_fin ? asignacion.hora_fin.substring(0, 5) : '';
+                const horario = horaInicio && horaFin ? ` - ${horaInicio} a ${horaFin}` : '';
+                
+                materiaSelect.innerHTML += `<option value="${asignacion.id_materia}">${asignacion.nombre_materia} (${asignacion.codigo_materia})${horario}</option>`;
+            });
+        }
+        
+        // Cargar alumnos del grupo seleccionado
+        async function cargarAlumnosGrupo() {
+            const grupoId = document.getElementById('selectGrupo').value;
+            const materiaId = document.getElementById('selectMateria').value;
+            const fecha = document.getElementById('fechaAsistencia').value;
+            
+            // Validar que se hayan seleccionado tanto el grupo como la materia
+            if (!grupoId || !materiaId) {
+                document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+                return;
+            }
+            
+            // Validar que se haya seleccionado una fecha
+            if (!fecha) {
+                showAlert('Por favor seleccione una fecha', 'error');
+                document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+                return;
+            }
+            
+            try {
+                // Obtener id_asignacion
+                const materiaSelect = document.getElementById('selectMateria');
+                const asignacionId = materiaSelect.options[materiaSelect.selectedIndex].dataset.asignacion;
+                
+                // Verificar si ya existe un registro de asistencia para esta fecha
+                const verificarResponse = await fetch(`/api/asistencias?id_asignacion=${asignacionId}&fecha=${fecha}`);
+                const registrosExistentes = await verificarResponse.json();
+                
+                if (registrosExistentes.length > 0) {
+                    const confirmar = confirm(
+                        '⚠️ Ya existe un registro de asistencia para esta fecha.\n\n' +
+                        '¿Deseas modificar el registro existente?\n\n' +
+                        'Presiona OK para modificar o Cancelar para volver.'
+                    );
+                    
+                    if (!confirmar) {
+                        document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+                        return;
+                    }
+                }
+                
+                // Obtener alumnos del grupo
+                const response = await fetch(`/api/alumnos/grupo/${grupoId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener alumnos');
+                }
+                
+                const alumnos = await response.json();
+                
+                console.log('Alumnos del grupo:', alumnos);
+                
+                const listaAlumnos = document.getElementById('listaAlumnos');
+                listaAlumnos.innerHTML = '';
+                
+                if (alumnos.length === 0) {
+                    listaAlumnos.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No hay alumnos registrados en este grupo</p>';
+                    document.getElementById('registroAsistenciaContainer').classList.remove('hidden');
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Foto</th><th>Matrícula</th><th>Nombre</th><th>Asistencia</th></tr>';
+                
+                // Crear un mapa de los registros existentes por id_alumno
+                const registrosMap = {};
+                if (registrosExistentes.length > 0) {
+                    registrosExistentes.forEach(reg => {
+                        registrosMap[reg.id_alumno] = reg.estado;
+                    });
+                }
+                
+                alumnos.forEach(alumno => {
+                    const fotoHTML = alumno.foto_base64 
+                        ? `<img src="${alumno.foto_base64}" alt="Foto" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #667eea;">` 
+                        : '<i class="fas fa-user-circle" style="font-size: 50px; color: #ccc;"></i>';
+                    
+                    // Si hay un registro existente, usar ese estado; si no, usar "falta" por defecto
+                    const estadoGuardado = registrosMap[alumno.id_alumno] || 'falta';
+                    
+                    html += `<tr>
+                        <td style="text-align: center;">${fotoHTML}</td>
+                        <td><strong>${alumno.matricula}</strong></td>
+                        <td>${alumno.nombre_completo}</td>
+                        <td>
+                            <div style="display: flex; gap: 15px; justify-content: center;">
+                                <label style="cursor: pointer;">
+                                    <input type="radio" name="asistencia_${alumno.id_alumno}" value="asistencia" ${estadoGuardado === 'asistencia' ? 'checked' : ''}> 
+                                    <i class="fas fa-check-circle" style="color: #28a745;"></i> Asistencia
+                                </label>
+                                <label style="cursor: pointer;">
+                                    <input type="radio" name="asistencia_${alumno.id_alumno}" value="falta" ${estadoGuardado === 'falta' ? 'checked' : ''}> 
+                                    <i class="fas fa-times-circle" style="color: #dc3545;"></i> Falta
+                                </label>
+                                <label style="cursor: pointer;">
+                                    <input type="radio" name="asistencia_${alumno.id_alumno}" value="justificante" ${estadoGuardado === 'justificante' ? 'checked' : ''}> 
+                                    <i class="fas fa-file-medical" style="color: #ffc107;"></i> Justificante
+                                </label>
+                            </div>
+                            <input type="hidden" name="id_alumno_${alumno.id_alumno}" value="${alumno.id_alumno}">
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                listaAlumnos.innerHTML = html;
+                
+                // Mostrar mensaje si se están cargando registros existentes
+                if (registrosExistentes.length > 0) {
+                    showAlert('📝 Estás editando un registro existente. Los estados mostrados son los guardados previamente.', 'warning');
+                }
+                
+                // Mostrar el contenedor de registro de asistencia
+                document.getElementById('registroAsistenciaContainer').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+                showAlert('Error al cargar la lista de alumnos', 'error');
+            }
+        }
+        
+        // Registrar asistencia
+        document.getElementById('formAsistencia').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const grupoId = document.getElementById('selectGrupo').value;
+            const materiaSelect = document.getElementById('selectMateria');
+            const materiaId = materiaSelect.value;
+            const fecha = document.getElementById('fechaAsistencia').value;
+            
+            if (!grupoId || !materiaId || !fecha) {
+                showAlert('Seleccione grupo, materia y fecha', 'error');
+                return;
+            }
+            
+            // Obtener id_asignacion del option seleccionado
+            const asignacionId = materiaSelect.options[materiaSelect.selectedIndex].dataset.asignacion;
+            
+            if (!asignacionId) {
+                showAlert('Error: No se pudo obtener la asignación', 'error');
+                return;
+            }
+            
+            // Preparar datos de asistencia
+            const asistencias = [];
+            const tabla = document.querySelector('#listaAlumnos table');
+            const filas = tabla.querySelectorAll('tr');
+            
+            // Omitir la fila de encabezados
+            for (let i = 1; i < filas.length; i++) {
+                const fila = filas[i];
+                const inputsRadio = fila.querySelectorAll('input[type="radio"]');
+                const alumnoId = fila.querySelector('input[type="hidden"]').value;
+                
+                let estado = 'falta'; // valor por defecto
+                inputsRadio.forEach(radio => {
+                    if (radio.checked) {
+                        estado = radio.value;
+                    }
+                });
+                
+                asistencias.push({
+                    id_alumno: parseInt(alumnoId),
+                    estado: estado,
+                    observaciones: null
+                });
+            }
+            
+            try {
+                // Registrar asistencias masivamente usando el endpoint correcto
+                const response = await fetch('/api/asistencias/registrar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_asignacion: parseInt(asignacionId),
+                        fecha: fecha,
+                        asistencias: asistencias
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`✅ ${data.message || 'Asistencia registrada correctamente'}`, 'success');
+                    
+                    // Limpiar formulario después de 2 segundos
+                    setTimeout(() => {
+                        document.getElementById('selectGrupo').value = '';
+                        document.getElementById('selectMateria').innerHTML = '<option value="">Seleccionar materia...</option>';
+                        document.getElementById('registroAsistenciaContainer').classList.add('hidden');
+                    }, 2000);
+                } else {
+                    showAlert(data.error || 'Error al registrar asistencia', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error al registrar asistencia:', error);
+                showAlert('Error de conexión con el servidor', 'error');
+            }
+        });
+        
+        // Cargar historial de asistencias
+        async function cargarHistorico() {
+            const grupoId = document.getElementById('selectGrupoHistorico').value;
+            const materiaId = document.getElementById('selectMateriaHistorico').value;
+            const fechaHistorico = document.getElementById('fechaHistorico').value;
+            
+            if (!grupoId) {
+                showAlert('Seleccione un grupo para consultar', 'error');
+                return;
+            }
+            
+            if (!materiaId) {
+                showAlert('Seleccione una materia para consultar', 'error');
+                return;
+            }
+            
+            if (!fechaHistorico) {
+                showAlert('Seleccione una fecha para consultar', 'error');
+                return;
+            }
+            
+            try {
+                // Obtener asistencias del grupo
+                let url = `/api/asistencias?id_grupo=${grupoId}`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener asistencias');
+                }
+                
+                let asistencias = await response.json();
+                
+                // Filtrar por materia y por la fecha específica seleccionada
+                asistencias = asistencias.filter(a => {
+                    // Convertir la fecha desde el servidor (formato YYYY-MM-DD) para comparar
+                    const fechaAsistencia = a.fecha.split('T')[0]; // Si viene como timestamp
+                    return fechaAsistencia === fechaHistorico && a.id_materia == materiaId;
+                });
+                
+                console.log('Asistencias filtradas:', asistencias);
+                
+                const historicoTable = document.getElementById('historicoTable');
+                
+                if (asistencias.length === 0) {
+                    historicoTable.innerHTML = '<p style="text-align: center; color: #666; padding: 30px;">No hay registros de asistencia para los filtros seleccionados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Fecha</th><th>Materia</th><th>Matrícula</th><th>Alumno</th><th>Estado</th><th>Hora</th></tr>';
+                
+                asistencias.forEach(registro => {
+                    let estadoClass = 'success';
+                    let estadoTexto = registro.estado;
+                    
+                    if (registro.estado === 'falta') {
+                        estadoClass = 'error';
+                        estadoTexto = 'Falta';
+                    } else if (registro.estado === 'justificante') {
+                        estadoClass = 'warning';
+                        estadoTexto = 'Justificante';
+                    } else {
+                        estadoTexto = 'Asistencia';
+                    }
+                    
+                    html += `<tr>
+                        <td>${new Date(registro.fecha).toLocaleDateString('es-MX')}</td>
+                        <td>${registro.nombre_materia}</td>
+                        <td><strong>${registro.matricula}</strong></td>
+                        <td>${registro.nombre_alumno}</td>
+                        <td><span class="badge ${estadoClass}">${estadoTexto}</span></td>
+                        <td>${registro.hora_registro ? registro.hora_registro.substring(0, 5) : '-'}</td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                
+                // Agregar resumen
+                const totalAsistencias = asistencias.filter(a => a.estado === 'asistencia').length;
+                const totalFaltas = asistencias.filter(a => a.estado === 'falta').length;
+                const totalJustificantes = asistencias.filter(a => a.estado === 'justificante').length;
+                
+                html += `
+                    <div style="margin-top: 20px; padding: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 10px;">
+                        <h4 style="color: #667eea; margin-bottom: 15px;">📊 Resumen</h4>
+                        <div style="display: flex; gap: 20px; justify-content: space-around;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; color: #28a745; font-weight: bold;">${totalAsistencias}</div>
+                                <div style="color: #666;">Asistencias</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; color: #dc3545; font-weight: bold;">${totalFaltas}</div>
+                                <div style="color: #666;">Faltas</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; color: #ffc107; font-weight: bold;">${totalJustificantes}</div>
+                                <div style="color: #666;">Justificantes</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 2rem; color: #667eea; font-weight: bold;">${asistencias.length}</div>
+                                <div style="color: #666;">Total Registros</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                historicoTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar historial:', error);
+                showAlert('Error al cargar el historial de asistencias', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+

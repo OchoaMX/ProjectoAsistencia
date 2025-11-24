@@ -1,0 +1,69 @@
+<%- include('partials/header', { 
+    title: 'Grupos - Panel de Administración',
+    currentPage: 'grupos',
+    cssFile: 'grupos.css',
+    jsFile: 'grupos.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Registro de Grupos</h2>
+    <form id="formGrupo">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombreGrupo">Nombre del Grupo:</label>
+                <input type="text" id="nombreGrupo" name="nombreGrupo" placeholder="Ej: A" required>
+            </div>
+            <div class="form-group">
+                <label for="idCarrera">Carrera:</label>
+                <select id="idCarrera" name="idCarrera" required>
+                    <option value="">Seleccionar carrera...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="semestreActual">Semestre:</label>
+                <select id="semestreActual" name="semestreActual" required>
+                    <option value="">Primero selecciona una carrera</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="turno">Turno:</label>
+                <select id="turno" name="turno" required>
+                    <option value="">Seleccionar turno...</option>
+                    <option value="Matutino">Matutino</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="periodo">Periodo:</label>
+                <select id="periodo" name="periodo" required>
+                    <option value="">Seleccionar periodo...</option>
+                    <option value="Enero-Junio">Enero-Junio</option>
+                    <option value="Agosto-Enero">Agosto-Enero</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="anio">Año:</label>
+                <input type="number" id="anio" name="anio" min="2020" max="2030" value="2025" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Registrar Grupo
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Grupos Registrados</h3>
+        <div class="filter-section">
+            <label for="filterCarreraGrupo">Filtrar por Carrera:</label>
+            <select id="filterCarreraGrupo">
+                <option value="">Todas las carreras</option>
+            </select>
+            <label for="filterSemestreGrupo">Filtrar por Semestre:</label>
+            <select id="filterSemestreGrupo">
+                <option value="">Todos los semestres</option>
+            </select>
+        </div>
+        <div id="gruposTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'grupos.js' }) %>

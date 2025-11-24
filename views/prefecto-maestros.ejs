@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Prefectos - Control de Maestros</title>
+    <link rel="stylesheet" href="/css/<%= cssFile %>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="/js/auth-common.js"></script>
+</head>
+<body>
+    <div class="prefecto-container">
+        <!-- Header -->
+        <header class="prefecto-header">
+            <div class="prefecto-header-content">
+                <div class="prefecto-title">
+                    <i class="fas fa-school icon"></i>
+                    PORTAL DE PREFECTOS - Sistema de Asistencia Escolar
+                </div>
+                <div class="prefecto-user-info">
+                    <span class="prefecto-user-name">
+                        <i class="fas fa-user-circle"></i>
+                        <%= user ? user.nombre : 'Usuario del Sistema' %>
+                    </span>
+                    <button onclick="cerrarSesion()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegación -->
+        <nav class="prefecto-nav">
+            <div class="prefecto-nav-content">
+                <a href="/prefecto/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/prefecto/alumnos-problematicos" class="nav-link">
+                    <i class="fas fa-user-times"></i>
+                    Alumnos Problemáticos
+                </a>
+                <a href="/prefecto/maestros-control" class="nav-link active">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Control Maestros
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="prefecto-main">
+            <!-- Header con fecha -->
+            <div class="prefecto-date-header fade-in">
+                <div class="current-date">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>CONTROL DE REGISTRO DE ASISTENCIAS - MAESTROS</span>
+                </div>
+                <div class="panel-actions">
+                    <input type="date" id="fechaControl" class="filter-input" onchange="cambiarFecha()">
+                    <button class="action-btn primary" onclick="verHistorico()">
+                        <i class="fas fa-history"></i>
+                        Ver Histórico
+                    </button>
+                    <button class="action-btn warning" onclick="enviarRecordatorios()">
+                        <i class="fas fa-bell"></i>
+                        Enviar Recordatorios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Resumen del día -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-calendar-day"></i>
+                        Resumen del Día
+                    </h2>
+                    <div class="panel-actions">
+                        <button class="action-btn ghost" onclick="actualizarDatos()">
+                            <i class="fas fa-sync-alt"></i>
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="metrics-grid">
+                        <div class="metric-card primary">
+                            <div class="metric-header">
+                                <span class="metric-title">Clases Programadas</span>
+                                <i class="fas fa-calendar metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="totalProgramadas">0</div>
+                        </div>
+                        <div class="metric-card success">
+                            <div class="metric-header">
+                                <span class="metric-title">Registradas</span>
+                                <i class="fas fa-check-circle metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="totalRegistradas">0</div>
+                            <div class="metric-percentage positive" id="porcentajeRegistradas">
+                                0% ✅
+                            </div>
+                        </div>
+                        <div class="metric-card danger">
+                            <div class="metric-header">
+                                <span class="metric-title">Sin Registrar</span>
+                                <i class="fas fa-exclamation-triangle metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="totalSinRegistrar">0</div>
+                            <div class="metric-percentage negative" id="porcentajeSinRegistrar">
+                                0% ⚠️
+                            </div>
+                        </div>
+                        <div class="metric-card info">
+                            <div class="metric-header">
+                                <span class="metric-title">% Cumplimiento</span>
+                                <i class="fas fa-percentage metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="porcentajeCumplimiento">0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid principal -->
+            <div class="content-grid two-columns">
+                <!-- Clases sin registro -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Clases Sin Registro de Asistencia
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Maestro</th>
+                                        <th>Materia</th>
+                                        <th>Grupo</th>
+                                        <th>Horario</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaSinRegistro">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clases registradas -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-check-circle"></i>
+                            Clases con Registro Completo
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Maestro</th>
+                                        <th>Materia</th>
+                                        <th>Grupo</th>
+                                        <th>Registrado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaConRegistro">
+                                    <!-- Se llena dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center mt-3">
+                            <button class="action-btn ghost" onclick="verTodosRegistros()">
+                                <i class="fas fa-list"></i>
+                                <span id="btnVerTodos">Ver todos...</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maestros problemáticos -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-user-times"></i>
+                        Maestros con Problemas Recurrentes
+                    </h2>
+                    <div class="panel-actions">
+                        <select id="periodoProblemas" class="filter-select" onchange="actualizarProblematicos()">
+                            <option value="7">Última semana</option>
+                            <option value="15">Últimas 2 semanas</option>
+                            <option value="30" selected>Último mes</option>
+                        </select>
+                        <select id="umbralCumplimiento" class="filter-select" onchange="actualizarProblematicos()">
+                            <option value="90">< 90% cumplimiento</option>
+                            <option value="80" selected>< 80% cumplimiento</option>
+                            <option value="70">< 70% cumplimiento</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Maestro</th>
+                                    <th>Usuario</th>
+                                    <th>Clases Programadas</th>
+                                    <th>Sin Registro</th>
+                                    <th>% Cumplimiento</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaProblematicos">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones masivas -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-cogs"></i>
+                        Acciones Masivas
+                    </h2>
+                </div>
+                <div class="panel-content">
+                    <div class="content-grid three-columns">
+                        <button class="action-card warning" onclick="enviarRecordatoriosMasivos()">
+                            <div class="action-icon">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Recordatorios Masivos</h4>
+                                <p>Enviar recordatorio a todos los maestros sin registro</p>
+                            </div>
+                        </button>
+                        
+                        <button class="action-card primary" onclick="exportarReportePDF()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Reporte PDF</h4>
+                                <p>Generar reporte completo del día</p>
+                            </div>
+                        </button>
+                        
+                        <button class="action-card success" onclick="exportarExcel()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Exportar Excel</h4>
+                                <p>Descargar datos en formato Excel</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal de histórico -->
+    <div id="modalHistorico" class="modal hidden">
+        <div class="modal-overlay" onclick="cerrarModal()"></div>
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Histórico de Registros de Maestros</h3>
+                <button class="modal-close" onclick="cerrarModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="filters-grid mb-3">
+                    <div class="filter-group">
+                        <label class="filter-label">Desde:</label>
+                        <input type="date" id="fechaDesde" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Hasta:</label>
+                        <input type="date" id="fechaHasta" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Maestro:</label>
+                        <select id="filtroMaestro" class="filter-select">
+                            <option value="">Todos los maestros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="filters-actions mb-4">
+                    <button class="action-btn primary" onclick="buscarHistorico()">
+                        <i class="fas fa-search"></i>
+                        Buscar
+                    </button>
+                </div>
+                <div id="resultadosHistorico">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden">
+        <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                Cargando datos de control...
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/auth-utils.js"></script>
+    <script src="/js/<%= jsFile %>"></script>
+
+    <style>
+        /* Estilos específicos para control de maestros */
+        .action-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-card.primary {
+            border-color: var(--color-primary);
+        }
+
+        .action-card.primary:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .action-card.warning {
+            border-color: var(--color-warning);
+        }
+
+        .action-card.warning:hover {
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .action-card.success {
+            border-color: var(--color-success);
+        }
+
+        .action-card.success:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-card.primary .action-icon {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--color-primary);
+        }
+
+        .action-card.warning .action-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+
+        .action-card.success .action-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+
+        .action-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .action-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1050;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--color-gray-500);
+        }
+
+        .modal-close:hover {
+            color: var(--color-gray-800);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .action-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem;
+            }
+        }
+    </style>
+</body>
+</html>

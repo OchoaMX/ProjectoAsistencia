@@ -1,0 +1,32 @@
+<%- include('partials/header', { 
+    title: 'Materias - Panel de Administración',
+    currentPage: 'materias',
+    cssFile: 'materias.css',
+    jsFile: 'materias.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Registro de Materias</h2>
+    <form id="formMateria">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombreMateria">Nombre de la Materia:</label>
+                <input type="text" id="nombreMateria" name="nombreMateria" required>
+            </div>
+            <div class="form-group">
+                <label for="codigoMateria">Código de Materia:</label>
+                <input type="text" id="codigoMateria" name="codigoMateria" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Registrar Materia
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Materias Registradas</h3>
+        <div id="materiasTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'materias.js' }) %>

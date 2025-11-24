@@ -1,0 +1,51 @@
+<%- include('partials/header', { 
+    title: 'Usuarios del Sistema - Panel de Administración',
+    currentPage: 'usuarios',
+    cssFile: 'usuarios.css',
+    jsFile: 'usuarios.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Gestión de Usuarios del Sistema</h2>
+    <form id="formUsuarioUnificado">
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tipo de Usuario:</label>
+                <select name="tipoUsuario" id="tipoUsuario" required onchange="toggleNombreReal()">
+                    <option value="">Seleccionar tipo...</option>
+                    <option value="admin">Administrador</option>
+                    <option value="maestro">Maestro</option>
+                    <option value="prefecto">Prefecto</option>
+                </select>
+            </div>
+            <div class="form-group" id="grupo_nombre_real" style="display:none;">
+                <label>Nombre Completo:</label>
+                <input type="text" name="nombreReal" id="nombreReal" placeholder="Ej: Juan Pérez García">
+            </div>
+            <div class="form-group">
+                <label>Usuario de Acceso:</label>
+                <input type="text" id="nombreUsuario" name="nombreUsuario" required placeholder="Ej: jperez">
+            </div>
+            <div class="form-group">
+                <label>Contraseña:</label>
+                <input type="password" id="contrasena" name="contrasena" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Registrar Usuario
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Usuarios del Sistema</h3>
+        <div class="view-controls">
+            <button class="btn-primary" onclick="cargarUsuariosUnificados()">
+                <i class="fas fa-refresh"></i> Actualizar Lista
+            </button>
+        </div>
+        <div id="usuariosUnificadosTable"></div>
+    </div>
+</div>
+
+
+<%- include('partials/footer', { jsFile: 'usuarios.js' }) %>

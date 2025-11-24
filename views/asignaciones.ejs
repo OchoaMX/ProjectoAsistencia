@@ -1,0 +1,88 @@
+<%- include('partials/header', { 
+    title: 'Asignaciones - Panel de Administración',
+    currentPage: 'asignaciones',
+    cssFile: 'asignaciones.css',
+    jsFile: 'asignaciones.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Asignar Horarios de Clases</h2>
+    <p style="text-align: center; color: #666; margin-bottom: 20px;">
+        Asigna materias a grupos con maestros y horarios específicos
+    </p>
+    
+    <form id="formAsignacion">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="idCarreraAsig">Carrera: <span class="required">*</span></label>
+                <select id="idCarreraAsig" name="id_carrera" required>
+                    <option value="">Seleccionar carrera...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="idGrupoAsig">Grupo: <span class="required">*</span></label>
+                <select id="idGrupoAsig" name="id_grupo" required>
+                    <option value="">Primero selecciona una carrera</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="idMateriaAsig">Materia: <span class="required">*</span></label>
+                <select id="idMateriaAsig" name="id_materia" required>
+                    <option value="">Primero selecciona una carrera</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="idMaestroAsig">Maestro: <span class="required">*</span></label>
+                <select id="idMaestroAsig" name="id_maestro" required>
+                    <option value="">Seleccionar maestro...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="idHorarioAsig">Horario: <span class="required">*</span></label>
+                <select id="idHorarioAsig" name="id_horario" required>
+                    <option value="">Primero selecciona grupo y maestro</option>
+                </select>
+                <small style="color: #666;">Solo se muestran horarios disponibles (no ocupados por el grupo ni el maestro)</small>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Crear Asignación
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Asignaciones Registradas</h3>
+        <div class="filter-section">
+            <label for="filterCarreraAsig">Filtrar por Carrera:</label>
+            <select id="filterCarreraAsig">
+                <option value="">Todas las carreras</option>
+            </select>
+            <label for="filterGrupoAsig" style="margin-left: 15px;">Filtrar por Grupo:</label>
+            <select id="filterGrupoAsig">
+                <option value="">Todos los grupos</option>
+            </select>
+            <label for="filterDiaAsig" style="margin-left: 15px;">Filtrar por Día:</label>
+            <select id="filterDiaAsig">
+                <option value="">Todos los días</option>
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+            </select>
+            <button class="btn-primary" onclick="filtrarAsignaciones()" style="margin-left: 15px;">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+        </div>
+        <div id="asignacionesTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'asignaciones.js' }) %>

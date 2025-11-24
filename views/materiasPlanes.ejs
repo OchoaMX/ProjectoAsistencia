@@ -1,0 +1,72 @@
+<%- include('partials/header', { 
+    title: 'Materias y Plan de Estudios - Panel de Administración',
+    currentPage: 'materias',
+    cssFile: 'materiasPlanes.css',
+    jsFile: 'materiasPlanes.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">📚 Gestión de Materias y Plan de Estudios</h2>
+    
+    <!-- Formulario de Registro -->
+    <form id="formMateria">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="selectCarrera">Carrera: *</label>
+                <select id="selectCarrera" name="idCarrera" required>
+                    <option value="">Seleccionar carrera...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="selectSemestre">Semestre: *</label>
+                <select id="selectSemestre" name="idSemestre" required disabled>
+                    <option value="">Primero seleccione una carrera...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombreMateria">Nombre de la Materia: *</label>
+                <input type="text" id="nombreMateria" name="nombreMateria" required placeholder="Ej: Cálculo Diferencial">
+            </div>
+            <div class="form-group">
+                <label for="codigoMateria">Código de Materia: *</label>
+                <input type="text" id="codigoMateria" name="codigoMateria" required placeholder="Ej: PW-301">
+            </div>
+        </div>
+        
+        
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-save"></i> Registrar Materia
+            </button>
+        </div>
+    </form>
+    
+    <!-- Visualización del Plan de Estudios -->
+    <div class="view-section">
+        <h3>📋 Plan de Estudios por Carrera</h3>
+        
+        <div class="filter-section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="filtroCarrera">Filtrar por Carrera:</label>
+                    <select id="filtroCarrera" onchange="cargarSemestresFiltro()">
+                        <option value="">Todas las carreras</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="filtroSemestre">Filtrar por Semestre:</label>
+                    <select id="filtroSemestre" onchange="cargarPlanEstudios()" disabled>
+                        <option value="">Todos los semestres</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div id="planEstudiosContainer"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'materiasPlanes.js' }) %>

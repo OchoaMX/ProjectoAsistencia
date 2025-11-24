@@ -1,0 +1,76 @@
+    </div>
+    
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4><i class="fas fa-graduation-cap"></i> Sistema de Asistencia</h4>
+                <div class="footer-links">
+                    <a href="/admin/usuarios"><i class="fas fa-users"></i> Usuarios</a>
+                    <a href="/admin/carreras"><i class="fas fa-graduation-cap"></i> Carreras</a>
+                    <a href="/admin/materias"><i class="fas fa-book"></i> Materias</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-cogs"></i> Administración</h4>
+                <div class="footer-links">
+                    <a href="/admin/grupos"><i class="fas fa-layer-group"></i> Grupos</a>
+                    <a href="/admin/alumnos"><i class="fas fa-user-graduate"></i> Alumnos</a>
+                    <a href="/admin/asignaciones"><i class="fas fa-tasks"></i> Asignaciones</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-chart-bar"></i> Reportes</h4>
+                <div class="footer-links">
+                    <a href="/admin/visualizar"><i class="fas fa-chart-line"></i> Visualizar Datos</a>
+                    <a href="#" onclick="exportarDatos()"><i class="fas fa-download"></i> Exportar</a>
+                    <a href="#" onclick="generarReporte()"><i class="fas fa-file-pdf"></i> Reporte PDF</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h4><i class="fas fa-info-circle"></i> Información</h4>
+                <p><i class="fas fa-calendar"></i> Año Académico 2025</p>
+                <p><i class="fas fa-user"></i> <span id="footerUserName">Administrador</span></p>
+                <p><i class="fas fa-clock"></i> Última actualización: <span id="lastUpdate"></span></p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2025 Sistema de Asistencia. Todos los derechos reservados.</p>
+                <div class="footer-social">
+                    <a href="#" title="Soporte"><i class="fas fa-life-ring"></i></a>
+                    <a href="#" title="Documentación"><i class="fas fa-book"></i></a>
+                    <a href="#" title="Configuración"><i class="fas fa-cog"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Modal para editar -->
+    <div id="modalEdicion" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <h2 id="modalTitulo">Editar</h2>
+            <form id="formEdicion">
+                <input type="hidden" id="editId" name="id">
+                <div id="camposEdicion"></div>
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts comunes -->
+    <script src="/js/common.js"></script>
+    
+    <!-- Scripts específicos por página -->
+    <% if (typeof jsFile !== 'undefined' && jsFile) { %>
+    <script src="/js/<%= jsFile %>"></script>
+    <% } %>
+</body>
+</html>

@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Asistencia - Panel de Administración</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        
+        /* Estilos para botones de acción */
+        .btn-editar, .btn-eliminar {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            color: white;
+        }
+        
+        .btn-editar {
+            background-color: #17a2b8;
+        }
+        
+        .btn-eliminar {
+            background-color: #dc3545;
+        }
+        
+        .btn-editar:hover {
+            background-color: #138496;
+        }
+        
+        .btn-eliminar:hover {
+            background-color: #c82333;
+        }
+        
+        /* Estilos para modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 5px;
+            width: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-info span {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            cursor: pointer;
+            background: white;
+            border: none;
+            transition: background 0.3s;
+            font-size: 1rem;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .section-title {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .view-section {
+            margin-top: 40px;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .view-controls select {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <h1><i class="fas fa-tachometer-alt"></i> Panel de Control</h1>
+        <div class="user-info">
+            <span id="userName">Usuario: Administrador</span>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="alerts"></div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('usuarios')">Usuarios</button>
+            <button class="tab" onclick="showTab('carreras')">Carreras</button>
+            <button class="tab" onclick="showTab('maestros')">Maestros</button>
+            <button class="tab" onclick="showTab('materias')">Materias</button>
+            <button class="tab" onclick="showTab('grupos')">Grupos</button>
+            <button class="tab" onclick="showTab('alumnos')">Alumnos</button>
+            <button class="tab" onclick="showTab('visualizar')">Visualizar Datos</button>
+        </div>
+
+        <!-- Tab Usuarios -->
+        <div id="usuarios" class="tab-content active">
+            <h2 class="section-title">Gestión de Usuarios</h2>
+            <form id="formUsuario">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre de Usuario:</label>
+                        <input type="text" name="nombre_usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña:</label>
+                        <input type="password" name="contrasena" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Usuario:</label>
+                        <select name="tipo_usuario" required>
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="admin">Administrador</option>
+                            <option value="maestro">Maestro</option>
+                            <option value="prefecto">Prefecto</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Usuario
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Usuarios Registrados</h3>
+                <div class="view-controls">
+                    <button class="btn-primary" onclick="cargarUsuarios()">
+                        <i class="fas fa-refresh"></i> Actualizar Lista
+                    </button>
+                </div>
+                <div id="usuariosTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Carreras -->
+        <div id="carreras" class="tab-content">
+            <h2 class="section-title">Registro de Carreras</h2>
+            <form id="formCarrera">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_carrera">Nombre de la Carrera:</label>
+                        <input type="text" id="nombre_carrera" name="nombre_carrera" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo_carrera">Código de Carrera:</label>
+                        <input type="text" id="codigo_carrera" name="codigo_carrera" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="numero_semestres">Número de Semestres:</label>
+                        <input type="number" id="numero_semestres" name="numero_semestres" min="1" max="12" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Carrera
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Carreras Registradas</h3>
+                <div id="carrerasTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Maestros -->
+        <div id="maestros" class="tab-content">
+            <h2 class="section-title">Registro de Maestros</h2>
+            <form id="formMaestro">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_maestro">Nombre del Maestro:</label>
+                        <input type="text" id="nombre_maestro" name="nombre_maestro" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre_usuario">Usuario:</label>
+                        <input type="text" id="nombre_usuario" name="nombre_usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="contrasena">Contraseña:</label>
+                        <input type="password" id="contrasena" name="contrasena" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Maestro
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Maestros Registrados</h3>
+                <div id="maestrosTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Materias -->
+        <div id="materias" class="tab-content">
+            <h2 class="section-title">Registro de Materias</h2>
+            <form id="formMateria">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_materia">Nombre de la Materia:</label>
+                        <input type="text" id="nombre_materia" name="nombre_materia" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo_materia">Código de Materia:</label>
+                        <input type="text" id="codigo_materia" name="codigo_materia" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Materia
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Materias Registradas</h3>
+                <div id="materiasTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Grupos -->
+        <div id="grupos" class="tab-content">
+            <h2 class="section-title">Registro de Grupos</h2>
+            <form id="formGrupo">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_grupo">Nombre del Grupo:</label>
+                        <input type="text" id="nombre_grupo" name="nombre_grupo" placeholder="Ej: 501" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_carrera">Carrera:</label>
+                        <select id="id_carrera" name="id_carrera" required>
+                            <option value="">Seleccionar carrera...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="semestre">Semestre:</label>
+                        <select id="semestre" name="semestre" required>
+                            <option value="">Primero selecciona una carrera</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Grupo
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Grupos Registrados</h3>
+                <div id="gruposTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Alumnos -->
+        <div id="alumnos" class="tab-content">
+            <h2 class="section-title">Registro de Alumnos</h2>
+            <form id="formAlumno">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="matricula">Matrícula:</label>
+                        <input type="text" id="matricula" name="matricula" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nombre_alumno">Nombre del Alumno:</label>
+                        <input type="text" id="nombre_alumno" name="nombre_alumno" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="plan_estudios">Plan de Estudios:</label>
+                        <input type="text" id="plan_estudios" name="plan_estudios" placeholder="Ej: 2022" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="id_carrera_alumno">Carrera:</label>
+                        <select id="id_carrera_alumno" name="id_carrera_alumno" required>
+                            <option value="">Seleccionar carrera...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_grupo">Grupo:</label>
+                        <select id="id_grupo" name="id_grupo" required>
+                            <option value="">Primero selecciona una carrera</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-save"></i> Registrar Alumno
+                </button>
+            </form>
+            
+            <div class="view-section">
+                <h3>Alumnos Registrados</h3>
+                <div id="alumnosTable"></div>
+            </div>
+        </div>
+
+        <!-- Tab Visualizar -->
+        <div id="visualizar" class="tab-content">
+            <h2 class="section-title">Visualizar Datos del Sistema</h2>
+            
+            <div class="view-controls">
+                <select id="viewCarrera">
+                    <option value="">Todas las carreras</option>
+                </select>
+                <select id="viewSemestre">
+                    <option value="">Todos los semestres</option>
+                </select>
+                <select id="viewGrupo">
+                    <option value="">Todos los grupos</option>
+                </select>
+                <button class="btn-primary" onclick="consultarEstructura()">
+                    <i class="fas fa-search"></i> Consultar
+                </button>
+            </div>
+
+            <div id="viewResults">
+                <h3>Estructura del Sistema:</h3>
+                <div id="estructuraTable"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para editar -->
+    <div id="modalEdicion" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <h2 id="modalTitulo">Editar</h2>
+            <form id="formEdicion">
+                <input type="hidden" id="editId" name="id">
+                <div id="camposEdicion"></div>
+                <button type="submit" class="btn-primary" style="margin-top: 20px;">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Verificar autenticación al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!user.usuario || user.tipo_usuario !== 'admin') {
+                window.location.href = '/';
+                return;
+            }
+            
+            document.getElementById('userName').textContent = 'Usuario: ' + user.nombre || 'Administrador';
+            
+            // Cargar datos iniciales
+            cargarUsuarios();
+            cargarCarreras();
+            cargarMaestros();
+            cargarMaterias();
+            cargarGrupos();
+            cargarAlumnos();
+        });
+        
+        // Función para mostrar tabs
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+        
+        // Función para mostrar alertas
+        function showAlert(message, type) {
+            const alertsDiv = document.getElementById('alerts');
+            alertsDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                alertsDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Función para cerrar sesión
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+        
+        // ===== FUNCIONES DE EDICIÓN Y ELIMINACIÓN =====
+        
+        // Modal
+        function mostrarModal(titulo) {
+            const modal = document.getElementById('modalEdicion');
+            const modalTitulo = document.getElementById('modalTitulo');
+            modalTitulo.textContent = titulo;
+            modal.style.display = 'block';
+            modal.style.zIndex = '1000';
+            console.log('Modal mostrado, display:', modal.style.display);
+            console.log('Modal element:', modal);
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modalEdicion').style.display = 'none';
+        }
+        
+        // Carreras
+        function editarCarrera(id, nombre, codigo, semestres) {
+            mostrarModal('Editar Carrera');
+            
+            const camposEdicion = document.getElementById('camposEdicion');
+            camposEdicion.innerHTML = `
+                <div class="form-group">
+                    <label>Nombre de la Carrera:</label>
+                    <input type="text" name="nombre_carrera" value="${nombre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Código de Carrera:</label>
+                    <input type="text" name="codigo_carrera" value="${codigo}" required>
+                </div>
+                <div class="form-group">
+                    <label>Número de Semestres:</label>
+                    <input type="number" name="numero_semestres" min="1" max="12" value="${semestres}" required>
+                </div>
+            `;
+            
+            document.getElementById('editId').value = id;
+            
+            document.getElementById('formEdicion').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const carreraData = {
+                    nombre_carrera: formData.get('nombre_carrera'),
+                    codigo_carrera: formData.get('codigo_carrera'),
+                    numero_semestres: parseInt(formData.get('numero_semestres'))
+                };
+                
+                console.log('Enviando actualización de carrera:', carreraData);
+                
+                try {
+                    const response = await fetch(`/api/carreras/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(carreraData),
+                    });
+                    
+                    const data = await response.json();
+                    console.log('Respuesta actualización:', data);
+                    
+                    if (response.ok) {
+                        showAlert(data.message || 'Carrera actualizada correctamente', 'success');
+                        cerrarModal();
+                        cargarCarreras();
+                    } else {
+                        showAlert(data.error || 'Error al actualizar carrera', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar carrera:', error);
+                    showAlert('Error en el servidor', 'error');
+                }
+            };
+        }
+        
+        function eliminarCarrera(id, nombre) {
+            if (confirm(`¿Está seguro que desea eliminar la carrera ${nombre}? Esta acción no se puede deshacer.`)) {
+                fetch(`/api/carreras/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta eliminación:', data);
+                    if (data.message) {
+                        showAlert('Carrera eliminada correctamente', 'success');
+                        cargarCarreras();
+                    } else {
+                        showAlert(data.error || 'Error al eliminar carrera', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar carrera:', error);
+                    showAlert('Error en el servidor', 'error');
+                });
+            }
+        }
+        
+        // Maestros
+        function eliminarMaestro(id, nombre) {
+            if (confirm(`¿Está seguro que desea eliminar al maestro ${nombre}? Esta acción no se puede deshacer.`)) {
+                fetch(`/api/maestros/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Respuesta eliminación maestro:', data);
+                    if (data.message) {
+                        showAlert('Maestro eliminado correctamente', 'success');
+                        cargarMaestros();
+                    } else {
+                        showAlert(data.error || 'Error al eliminar maestro', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar maestro:', error);
+                    showAlert('Error en el servidor', 'error');
+                });
+            }
+        }
+        
+        // Materias
+        function editarMateria(id, nombre, codigo) {
+            mostrarModal('Editar Materia');
+            
+            const camposEdicion = document.getElementById('camposEdicion');
+            camposEdicion.innerHTML = `
+                <div class="form-group">
+                    <label>Nombre de la Materia:</label>
+                    <input type="text" name="nombre_materia" value="${nombre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Código de Materia:</label>
+                    <input type="text" name="codigo_materia" value="${codigo}" required>
+                </div>
+            `;
+            
+            document.getElementById('editId').value = id;
+            
+            document.getElementById('formEdicion').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const materiaData = {
+                    nombre_materia: formData.get('nombre_materia'),
+                    codigo_materia: formData.get('codigo_materia')
+                };
+                
+                try {
+                    const response = await fetch(`/api/materias/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(materiaData),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showAlert(data.message || 'Materia actualizada correctamente', 'success');
+                        cerrarModal();
+                        cargarMaterias();
+                    } else {
+                        showAlert(data.error || 'Error al actualizar materia', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar materia:', error);
+                    showAlert('Error en el servidor', 'error');
+                    cerrarModal();
+                }
+            };
+        }
+        
+        function eliminarMateria(id, nombre) {
+            if (confirm(`¿Está seguro que desea eliminar la materia ${nombre}? Esta acción no se puede deshacer.`)) {
+                fetch(`/api/materias/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        showAlert('Materia eliminada correctamente', 'success');
+                        cargarMaterias();
+                    } else {
+                        showAlert(data.error || 'Error al eliminar materia', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar materia:', error);
+                    showAlert('Error en el servidor', 'error');
+                });
+            }
+        }
+        
+        // Grupos
+        function editarGrupo(id, nombre, carreraId, semestre) {
+            mostrarModal('Editar Grupo');
+            
+            const camposEdicion = document.getElementById('camposEdicion');
+            camposEdicion.innerHTML = `
+                <div class="form-group">
+                    <label>Nombre del Grupo:</label>
+                    <input type="text" name="nombre_grupo" value="${nombre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Carrera:</label>
+                    <select name="id_carrera" id="editCarreraSelect" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Semestre:</label>
+                    <select name="semestre" id="editSemestreSelect" required></select>
+                </div>
+            `;
+            
+            document.getElementById('editId').value = id;
+            
+            // Cargar carreras desde la API
+            fetch('/api/carreras')
+                .then(response => response.json())
+                .then(carrerasData => {
+                    const carreraSelect = document.getElementById('editCarreraSelect');
+                    carreraSelect.innerHTML = '<option value="">Seleccionar carrera...</option>';
+                    
+                    carrerasData.forEach(carrera => {
+                        const option = document.createElement('option');
+                        option.value = carrera.id_carrera;
+                        option.textContent = carrera.nombre_carrera;
+                        if (carrera.id_carrera == carreraId) option.selected = true;
+                        carreraSelect.appendChild(option);
+                    });
+                    
+                    // Llenar select de semestres
+                    if (carreraId) {
+                        const carreraSeleccionada = carrerasData.find(c => c.id_carrera == carreraId);
+                        if (carreraSeleccionada) {
+                            const semestreSelect = document.getElementById('editSemestreSelect');
+                            semestreSelect.innerHTML = '<option value="">Seleccionar semestre...</option>';
+                            
+                            for (let i = 1; i <= carreraSeleccionada.numero_semestres; i++) {
+                                const option = document.createElement('option');
+                                option.value = i;
+                                option.textContent = `${i}° Semestre`;
+                                if (i == semestre) option.selected = true;
+                                semestreSelect.appendChild(option);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar carreras:', error);
+                    showAlert('Error al cargar carreras', 'error');
+                });
+            
+            // Actualizar semestres cuando cambia la carrera
+            document.getElementById('editCarreraSelect').addEventListener('change', function() {
+                const carreraId = this.value;
+                if (!carreraId) {
+                    document.getElementById('editSemestreSelect').innerHTML = '<option value="">Primero selecciona una carrera</option>';
+                    return;
+                }
+                
+                fetch(`/api/carreras/${carreraId}`)
+                    .then(response => response.json())
+                    .then(carrera => {
+                        const semestreSelect = document.getElementById('editSemestreSelect');
+                        semestreSelect.innerHTML = '<option value="">Seleccionar semestre...</option>';
+                        
+                        for (let i = 1; i <= carrera.numero_semestres; i++) {
+                            const option = document.createElement('option');
+                            option.value = i;
+                            option.textContent = `${i}° Semestre`;
+                            semestreSelect.appendChild(option);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al cargar semestres:', error);
+                        showAlert('Error al cargar semestres', 'error');
+                    });
+            });
+            
+            document.getElementById('formEdicion').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const grupoData = {
+                    nombre_grupo: formData.get('nombre_grupo'),
+                    id_carrera: formData.get('id_carrera'),
+                    semestre: parseInt(formData.get('semestre'))
+                };
+                
+                if (!grupoData.nombre_grupo || !grupoData.id_carrera || !grupoData.semestre) {
+                    showAlert('Todos los campos son requeridos', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/grupos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(grupoData),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showAlert(data.message || 'Grupo actualizado correctamente', 'success');
+                        cerrarModal();
+                        cargarGrupos();
+                    } else {
+                        showAlert(data.error || 'Error al actualizar grupo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar grupo:', error);
+                    showAlert('Error en el servidor', 'error');
+                }
+            };
+        }
+        
+        function eliminarGrupo(id, nombre) {
+            if (confirm(`¿Está seguro que desea eliminar el grupo ${nombre}? Esta acción no se puede deshacer.`)) {
+                fetch(`/api/grupos/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        showAlert('Grupo eliminado correctamente', 'success');
+                        cargarGrupos();
+                    } else {
+                        showAlert(data.error || 'Error al eliminar grupo', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar grupo:', error);
+                    showAlert('Error en el servidor', 'error');
+                });
+            }
+        }
+        
+        // Alumnos
+        function editarAlumno(id, matricula, nombre, plan, grupoId) {
+            mostrarModal('Editar Alumno');
+            
+            const camposEdicion = document.getElementById('camposEdicion');
+            camposEdicion.innerHTML = `
+                <div class="form-group">
+                    <label>Matrícula:</label>
+                    <input type="text" name="matricula" value="${matricula}" required>
+                </div>
+                <div class="form-group">
+                    <label>Nombre del Alumno:</label>
+                    <input type="text" name="nombre_alumno" value="${nombre}" required>
+                </div>
+                <div class="form-group">
+                    <label>Plan de Estudios:</label>
+                    <input type="text" name="plan_estudios" value="${plan}" required>
+                </div>
+                <div class="form-group">
+                    <label>Grupo:</label>
+                    <select name="id_grupo" id="editGrupoAlumnoSelect" required></select>
+                </div>
+            `;
+            
+            document.getElementById('editId').value = id;
+            
+            // Llenar select de grupos y preseleccionar el grupo actual
+            const grupoSelect = document.getElementById('editGrupoAlumnoSelect');
+            
+            // Primero cargamos todos los grupos disponibles
+            fetch('/api/grupos')
+                .then(response => response.json())
+                .then(grupos => {
+                    grupoSelect.innerHTML = '<option value="">Seleccionar grupo...</option>';
+                    
+                    grupos.forEach(grupo => {
+                        const option = document.createElement('option');
+                        option.value = grupo.id_grupo;
+                        option.textContent = `${grupo.nombre_grupo} - ${grupo.nombre_carrera} (${grupo.semestre}° Semestre)`;
+                        if (grupo.id_grupo == grupoId) option.selected = true;
+                        grupoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar grupos:', error);
+                    showAlert('Error al cargar grupos', 'error');
+                });
+            
+            document.getElementById('formEdicion').onsubmit = async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const alumnoData = {
+                    matricula: formData.get('matricula'),
+                    nombre_alumno: formData.get('nombre_alumno'),
+                    plan_estudios: formData.get('plan_estudios'),
+                    id_grupo: formData.get('id_grupo')
+                };
+                
+                if (!alumnoData.id_grupo) {
+                    showAlert('Por favor seleccione un grupo válido', 'error');
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/api/alumnos/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(alumnoData),
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        showAlert(data.message || 'Alumno actualizado correctamente', 'success');
+                        cerrarModal();
+                        cargarAlumnos();
+                    } else {
+                        showAlert(data.error || 'Error al actualizar alumno', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error al actualizar alumno:', error);
+                    showAlert('Error en el servidor', 'error');
+                }
+            };
+        }
+        
+        function eliminarAlumno(id, nombre) {
+            if (confirm(`⚠️ ELIMINAR FÍSICAMENTE al alumno ${nombre}?\n\n🚨 ADVERTENCIA: Esta acción es PERMANENTE e IRREVERSIBLE\n🚨 El alumno se borrará COMPLETAMENTE de la base de datos\n🚨 NO se podrá recuperar\n\n¿Estás ABSOLUTAMENTE SEGURO?`)) {
+                
+                if (confirm(`🚨 ÚLTIMA CONFIRMACIÓN 🚨\n\n¿Realmente quieres ELIMINAR FÍSICAMENTE a ${nombre}?\n\nEsta acción NO SE PUEDE DESHACER.`)) {
+                    
+                    console.log(`💥 Iniciando eliminación FÍSICA del alumno ID: ${id}, Nombre: ${nombre}`);
+                    
+                    fetch(`/api/alumnos/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        console.log(`📡 Respuesta del servidor:`, response.status, response.statusText);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(`📋 Datos de respuesta:`, data);
+                        
+                        if (data.success) {
+                            showAlert(`💥 ${data.message}`, 'success');
+                            cargarAlumnos(); // Recargar la tabla
+                            console.log(`💥 Alumno ELIMINADO FÍSICAMENTE del sistema`);
+                        } else {
+                            // Manejar diferentes tipos de errores
+                            if (data.tipo === 'tiene_asistencias') {
+                                showAlert(`⚠️ ${data.error}\n\nPara eliminar este alumno, debe eliminar primero sus registros de asistencia.`, 'error');
+                            } else if (data.tipo === 'referencia_externa') {
+                                showAlert(`⚠️ ${data.error}\n\nEste alumno tiene registros relacionados que impiden su eliminación.`, 'error');
+                            } else {
+                                showAlert(`❌ ${data.error || 'Error al eliminar alumno'}`, 'error');
+                            }
+                            console.error(`❌ Error al eliminar:`, data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error de conexión al eliminar alumno:', error);
+                        showAlert('❌ Error de conexión con el servidor. Por favor, inténtelo de nuevo.', 'error');
+                    });
+                }
+            }
+        }
+        
+        // ===== FUNCIONES PARA USUARIOS =====
+        async function cargarUsuarios() {
+            try {
+                const response = await fetch('/api/usuarios');
+                const usuarios = await response.json();
+                
+                const table = document.getElementById('usuariosTable');
+                if (usuarios.length === 0) {
+                    table.innerHTML = '<p>No hay usuarios registrados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>ID</th><th>Usuario</th><th>Tipo</th><th>Acciones</th></tr>';
+                
+                usuarios.forEach(usuario => {
+                    html += `<tr>
+                        <td>${usuario.id_usuario}</td>
+                        <td>${usuario.nombre_usuario}</td>
+                        <td>${usuario.tipo_usuario}</td>
+                        <td>
+                            <button onclick="editarUsuario(${usuario.id_usuario}, '${usuario.nombre_usuario}', '${usuario.tipo_usuario}')" class="btn-editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button onclick="eliminarUsuario(${usuario.id_usuario}, '${usuario.nombre_usuario}')" class="btn-eliminar">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                table.innerHTML = html;
+            } catch (error) {
+                console.error('Error al cargar usuarios:', error);
+                showAlert('Error al cargar usuarios', 'error');
+            }
+        }
+
+        function editarUsuario(id, nombre, tipo) {
+            const nuevoNombre = prompt('Nuevo nombre de usuario:', nombre);
+            if (nuevoNombre && nuevoNombre !== nombre) {
+                fetch(`/api/usuarios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre_usuario: nuevoNombre, tipo_usuario: tipo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert(data.message, 'success');
+                        cargarUsuarios();
+                    } else {
+                        showAlert(data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Error al actualizar usuario', 'error');
+                });
+            }
+        }
+
+        function eliminarUsuario(id, nombre) {
+            if (confirm(`⚠️ ELIMINAR FÍSICAMENTE al usuario ${nombre}?\n\n🚨 ADVERTENCIA: Esta acción es PERMANENTE e IRREVERSIBLE\n🚨 El usuario se borrará COMPLETAMENTE de la base de datos\n🚨 NO se podrá recuperar\n\n¿Estás ABSOLUTAMENTE SEGURO?`)) {
+                
+                if (confirm(`🚨 ÚLTIMA CONFIRMACIÓN 🚨\n\n¿Realmente quieres ELIMINAR FÍSICAMENTE a ${nombre}?\n\nEsta acción NO SE PUEDE DESHACER.`)) {
+                    
+                    console.log(`💥 Iniciando eliminación FÍSICA del usuario ID: ${id}, Nombre: ${nombre}`);
+                    
+                    fetch(`/api/usuarios/${id}`, {
+                        method: 'DELETE'
+                    })
+                    .then(response => {
+                        console.log(`📡 Respuesta del servidor:`, response.status, response.statusText);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log(`📋 Datos de respuesta:`, data);
+                        
+                        if (data.success) {
+                            showAlert(`💥 ${data.message}`, 'success');
+                            cargarUsuarios(); // Recargar la tabla
+                            console.log(`💥 Usuario ELIMINADO FÍSICAMENTE del sistema`);
+                        } else {
+                            // Manejar diferentes tipos de errores
+                            if (data.tipo === 'tiene_relaciones') {
+                                showAlert(`⚠️ ${data.error}\n\nPara eliminar este usuario, debe eliminar primero los maestros asociados.`, 'error');
+                            } else if (data.tipo === 'referencia_externa') {
+                                showAlert(`⚠️ ${data.error}\n\nEste usuario tiene registros relacionados que impiden su eliminación.`, 'error');
+                            } else {
+                                showAlert(`❌ ${data.error || 'Error al eliminar usuario'}`, 'error');
+                            }
+                            console.error(`❌ Error al eliminar:`, data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Error de conexión al eliminar usuario:', error);
+                        showAlert('❌ Error de conexión con el servidor. Por favor, inténtelo de nuevo.', 'error');
+                    });
+                }
+            }
+        }
+
+        // ===== FUNCIONES PARA CARRERAS =====
+        async function cargarCarreras() {
+            try {
+                const response = await fetch('/api/carreras');
+                const carreras = await response.json();
+                
+                // Actualizar selects de carreras
+                const selects = ['id_carrera', 'id_carrera_alumno', 'viewCarrera'];
+                
+                selects.forEach(selectId => {
+                    const select = document.getElementById(selectId);
+                    select.innerHTML = selectId === 'viewCarrera' 
+                        ? '<option value="">Todas las carreras</option>' 
+                        : '<option value="">Seleccionar carrera...</option>';
+                    
+                    carreras.forEach(carrera => {
+                        select.innerHTML += `<option value="${carrera.id_carrera}">${carrera.nombre_carrera}</option>`;
+                    });
+                });
+                
+                // Llenar tabla de carreras
+                const carrerasTable = document.getElementById('carrerasTable');
+                
+                if (carreras.length === 0) {
+                    carrerasTable.innerHTML = '<p>No hay carreras registradas</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Nombre</th><th>Código</th><th>Semestres</th><th>Acciones</th></tr>';
+                
+                carreras.forEach(carrera => {
+                    html += `<tr>
+                        <td>${carrera.nombre_carrera}</td>
+                        <td>${carrera.codigo_carrera}</td>
+                        <td>${carrera.numero_semestres}</td>
+                        <td>
+                            <button class="btn-editar" onclick="editarCarrera(${carrera.id_carrera}, '${carrera.nombre_carrera}', '${carrera.codigo_carrera}', ${carrera.numero_semestres})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-eliminar" onclick="eliminarCarrera(${carrera.id_carrera}, '${carrera.nombre_carrera}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                carrerasTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar carreras:', error);
+                showAlert('Error al cargar carreras', 'error');
+            }
+        }
+        
+        document.getElementById('formUsuario').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const usuarioData = {
+                nombre_usuario: formData.get('nombre_usuario'),
+                contrasena: formData.get('contrasena'),
+                tipo_usuario: formData.get('tipo_usuario')
+            };
+            
+            console.log('Enviando datos de usuario:', usuarioData);
+            
+            try {
+                const response = await fetch('/api/usuarios', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(usuarioData),
+                });
+                
+                const data = await response.json();
+                
+                if (data.message) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    cargarUsuarios(); // Actualizar la tabla automáticamente
+                } else {
+                    showAlert(data.error || 'Error al registrar usuario', 'error');
+                    console.error('Error respuesta:', data);
+                }
+            } catch (error) {
+                console.error('Error al registrar usuario:', error);
+                showAlert('Error de conexión con el servidor. Por favor, inténtelo de nuevo.', 'error');
+            }
+        });
+
+        document.getElementById('formCarrera').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const carreraData = {
+                nombre_carrera: formData.get('nombre_carrera'),
+                codigo_carrera: formData.get('codigo_carrera'),
+                numero_semestres: formData.get('numero_semestres')
+            };
+            
+            try {
+                const response = await fetch('/api/carreras', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(carreraData),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    cargarCarreras();
+                } else {
+                    showAlert(data.error || 'Error al registrar carrera', 'error');
+                }
+            } catch (error) {
+                console.error('Error al registrar carrera:', error);
+                showAlert('Error en el servidor', 'error');
+            }
+        });
+        
+        // ===== FUNCIONES PARA MAESTROS =====
+        async function cargarMaestros() {
+            try {
+                const response = await fetch('/api/maestros');
+                const maestros = await response.json();
+                
+                const maestrosTable = document.getElementById('maestrosTable');
+                
+                if (maestros.length === 0) {
+                    maestrosTable.innerHTML = '<p>No hay maestros registrados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Nombre</th><th>Usuario</th><th>Acciones</th></tr>';
+                
+                maestros.forEach(maestro => {
+                    html += `<tr>
+                        <td>${maestro.nombre_maestro}</td>
+                        <td>${maestro.nombre_usuario}</td>
+                        <td>
+                            <button class="btn-eliminar" onclick="eliminarMaestro(${maestro.id_maestro}, '${maestro.nombre_maestro}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                maestrosTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar maestros:', error);
+                showAlert('Error al cargar maestros', 'error');
+            }
+        }
+        
+        document.getElementById('formMaestro').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const maestroData = {
+                nombre_maestro: formData.get('nombre_maestro'),
+                nombre_usuario: formData.get('nombre_usuario'),
+                contrasena: formData.get('contrasena')
+            };
+            
+            try {
+                const response = await fetch('/api/maestros', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(maestroData),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    cargarMaestros();
+                } else {
+                    showAlert(data.error || 'Error al registrar maestro', 'error');
+                }
+            } catch (error) {
+                console.error('Error al registrar maestro:', error);
+                showAlert('Error en el servidor', 'error');
+            }
+        });
+        
+        // ===== FUNCIONES PARA MATERIAS =====
+        async function cargarMaterias() {
+            try {
+                const response = await fetch('/api/materias');
+                const materias = await response.json();
+                
+                const materiasTable = document.getElementById('materiasTable');
+                
+                if (materias.length === 0) {
+                    materiasTable.innerHTML = '<p>No hay materias registradas</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Nombre</th><th>Código</th><th>Acciones</th></tr>';
+                
+                materias.forEach(materia => {
+                    html += `<tr>
+                        <td>${materia.nombre_materia}</td>
+                        <td>${materia.codigo_materia}</td>
+                        <td>
+                            <button class="btn-editar" onclick="editarMateria(${materia.id_materia}, '${materia.nombre_materia}', '${materia.codigo_materia}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-eliminar" onclick="eliminarMateria(${materia.id_materia}, '${materia.nombre_materia}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                materiasTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar materias:', error);
+                showAlert('Error al cargar materias', 'error');
+            }
+        }
+        
+        document.getElementById('formMateria').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const materiaData = {
+                nombre_materia: formData.get('nombre_materia'),
+                codigo_materia: formData.get('codigo_materia')
+            };
+            
+            try {
+                const response = await fetch('/api/materias', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(materiaData),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    cargarMaterias();
+                } else {
+                    showAlert(data.error || 'Error al registrar materia', 'error');
+                }
+            } catch (error) {
+                console.error('Error al registrar materia:', error);
+                showAlert('Error en el servidor', 'error');
+            }
+        });
+        
+        // ===== FUNCIONES PARA GRUPOS =====
+        async function cargarGrupos() {
+            try {
+                const response = await fetch('/api/grupos');
+                const grupos = await response.json();
+                
+                const gruposTable = document.getElementById('gruposTable');
+                
+                if (grupos.length === 0) {
+                    gruposTable.innerHTML = '<p>No hay grupos registrados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Nombre</th><th>Carrera</th><th>Semestre</th><th>Acciones</th></tr>';
+                
+                grupos.forEach(grupo => {
+                    html += `<tr>
+                        <td>${grupo.nombre_grupo}</td>
+                        <td>${grupo.nombre_carrera} (${grupo.codigo_carrera})</td>
+                        <td>${grupo.semestre}° Semestre</td>
+                        <td>
+                            <button class="btn-editar" onclick="editarGrupo(${grupo.id_grupo}, '${grupo.nombre_grupo}', ${grupo.id_carrera}, ${grupo.semestre})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-eliminar" onclick="eliminarGrupo(${grupo.id_grupo}, '${grupo.nombre_grupo}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                gruposTable.innerHTML = html;
+                
+                // Actualizar select de grupos para alumnos
+                const viewGrupo = document.getElementById('viewGrupo');
+                viewGrupo.innerHTML = '<option value="">Todos los grupos</option>';
+                grupos.forEach(grupo => {
+                    viewGrupo.innerHTML += `<option value="${grupo.id_grupo}">${grupo.nombre_grupo} - ${grupo.nombre_carrera} (${grupo.semestre}° Semestre)</option>`;
+                });
+                
+            } catch (error) {
+                console.error('Error al cargar grupos:', error);
+                showAlert('Error al cargar grupos', 'error');
+            }
+        }
+        
+        document.getElementById('id_carrera').addEventListener('change', function() {
+            const carreraId = this.value;
+            const semestreSelect = document.getElementById('semestre');
+            
+            if (!carreraId) {
+                semestreSelect.innerHTML = '<option value="">Primero selecciona una carrera</option>';
+                return;
+            }
+            
+            // Obtener número de semestres de la carrera seleccionada
+            fetch(`/api/carreras/${carreraId}`)
+                .then(response => response.json())
+                .then(carrera => {
+                    semestreSelect.innerHTML = '<option value="">Seleccionar semestre...</option>';
+                    
+                    for (let i = 1; i <= carrera.numero_semestres; i++) {
+                        semestreSelect.innerHTML += `<option value="${i}">${i}° Semestre</option>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener carrera:', error);
+                    showAlert('Error al cargar semestres', 'error');
+                });
+        });
+        
+        document.getElementById('formGrupo').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const grupoData = {
+                nombre_grupo: formData.get('nombre_grupo'),
+                id_carrera: formData.get('id_carrera'),
+                semestre: formData.get('semestre')
+            };
+            
+            try {
+                const response = await fetch('/api/grupos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(grupoData),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    cargarGrupos();
+                } else {
+                    showAlert(data.error || 'Error al registrar grupo', 'error');
+                }
+            } catch (error) {
+                console.error('Error al registrar grupo:', error);
+                showAlert('Error en el servidor', 'error');
+            }
+        });
+        
+        // ===== FUNCIONES PARA ALUMNOS =====
+        async function cargarAlumnos() {
+            try {
+                const response = await fetch('/api/alumnos');
+                const alumnos = await response.json();
+                
+                const alumnosTable = document.getElementById('alumnosTable');
+                
+                if (alumnos.length === 0) {
+                    alumnosTable.innerHTML = '<p>No hay alumnos registrados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Matrícula</th><th>Nombre</th><th>Carrera</th><th>Grupo</th><th>Semestre</th><th>Plan</th><th>Acciones</th></tr>';
+                
+                alumnos.forEach(alumno => {
+                    html += `<tr>
+                        <td>${alumno.matricula}</td>
+                        <td>${alumno.nombre_alumno}</td>
+                        <td>${alumno.nombre_carrera || 'N/A'} (${alumno.codigo_carrera || 'N/A'})</td>
+                        <td>${alumno.nombre_grupo || 'N/A'}</td>
+                        <td>${alumno.semestre || 'N/A'}° Semestre</td>
+                        <td>${alumno.plan_estudios}</td>
+                        <td>
+                            <button class="btn-editar" onclick="editarAlumno(${alumno.id_alumno}, '${alumno.matricula}', '${alumno.nombre_alumno}', '${alumno.plan_estudios}', ${alumno.id_grupo})">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-eliminar" onclick="eliminarAlumno(${alumno.id_alumno}, '${alumno.nombre_alumno}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                alumnosTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al cargar alumnos:', error);
+                showAlert('Error al cargar alumnos', 'error');
+            }
+        }
+        
+        document.getElementById('id_carrera_alumno').addEventListener('change', function() {
+            const carreraId = this.value;
+            const grupoSelect = document.getElementById('id_grupo');
+            
+            if (!carreraId) {
+                grupoSelect.innerHTML = '<option value="">Primero selecciona una carrera</option>';
+                return;
+            }
+            
+            // Obtener grupos de la carrera seleccionada
+            fetch(`/api/grupos/carrera/${carreraId}`)
+                .then(response => response.json())
+                .then(grupos => {
+                    grupoSelect.innerHTML = '<option value="">Seleccionar grupo...</option>';
+                    
+                    grupos.forEach(grupo => {
+                        grupoSelect.innerHTML += `<option value="${grupo.id_grupo}">${grupo.nombre_grupo} - ${grupo.semestre}° Semestre</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al obtener grupos:', error);
+                    showAlert('Error al cargar grupos', 'error');
+                });
+        });
+        
+        document.getElementById('formAlumno').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const alumnoData = {
+                matricula: formData.get('matricula'),
+                nombre_alumno: formData.get('nombre_alumno'),
+                plan_estudios: formData.get('plan_estudios'),
+                id_grupo: formData.get('id_grupo')
+            };
+            
+            // Validaciones del lado del cliente
+            if (!alumnoData.matricula.trim()) {
+                showAlert('La matrícula es obligatoria', 'error');
+                return;
+            }
+            
+            if (!alumnoData.nombre_alumno.trim()) {
+                showAlert('El nombre del alumno es obligatorio', 'error');
+                return;
+            }
+            
+            if (!alumnoData.plan_estudios.trim()) {
+                showAlert('El plan de estudios es obligatorio', 'error');
+                return;
+            }
+            
+            if (!alumnoData.id_grupo) {
+                showAlert('Por favor seleccione primero una carrera y luego un grupo válido', 'error');
+                return;
+            }
+            
+            console.log('Enviando datos de alumno:', alumnoData);
+            
+            try {
+                const response = await fetch('/api/alumnos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(alumnoData),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message, 'success');
+                    this.reset();
+                    // Resetear los selects con los IDs correctos
+                    document.getElementById('id_carrera_alumno').value = '';
+                    document.getElementById('id_grupo').innerHTML = '<option value="">Primero selecciona una carrera</option>';
+                    cargarAlumnos(); // Actualizar la tabla automáticamente
+                } else {
+                    // Manejar diferentes tipos de errores
+                    if (data.tipo === 'matricula_duplicada') {
+                        showAlert(`⚠️ ${data.error}`, 'error');
+                        // Enfocar el campo de matrícula para que el usuario pueda corregirlo
+                        document.getElementById('matricula').focus();
+                        document.getElementById('matricula').select();
+                    } else {
+                        showAlert(data.error || 'Error al registrar alumno', 'error');
+                    }
+                    console.error('Error respuesta:', data);
+                }
+            } catch (error) {
+                console.error('Error al registrar alumno:', error);
+                showAlert('Error de conexión con el servidor. Por favor, inténtelo de nuevo.', 'error');
+            }
+        });
+        
+        // ===== FUNCIONES PARA VISUALIZACIÓN =====
+        document.getElementById('viewCarrera').addEventListener('change', function() {
+            const carreraId = this.value;
+            const semestreSelect = document.getElementById('viewSemestre');
+            
+            if (!carreraId) {
+                semestreSelect.innerHTML = '<option value="">Todos los semestres</option>';
+                document.getElementById('viewGrupo').innerHTML = '<option value="">Todos los grupos</option>';
+                return;
+            }
+            
+            // Obtener número de semestres de la carrera seleccionada
+            fetch(`/api/carreras/${carreraId}`)
+                .then(response => response.json())
+                .then(carrera => {
+                    semestreSelect.innerHTML = '<option value="">Todos los semestres</option>';
+                    
+                    for (let i = 1; i <= carrera.numero_semestres; i++) {
+                        semestreSelect.innerHTML += `<option value="${i}">${i}° Semestre</option>`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al obtener carrera:', error);
+                    showAlert('Error al cargar semestres', 'error');
+                });
+        });
+        
+        document.getElementById('viewSemestre').addEventListener('change', function() {
+            const carreraId = document.getElementById('viewCarrera').value;
+            const semestre = this.value;
+            const grupoSelect = document.getElementById('viewGrupo');
+            
+            if (!carreraId || !semestre) {
+                grupoSelect.innerHTML = '<option value="">Todos los grupos</option>';
+                return;
+            }
+            
+            // Filtrar grupos por carrera y semestre
+            fetch('/api/grupos')
+                .then(response => response.json())
+                .then(grupos => {
+                    grupoSelect.innerHTML = '<option value="">Todos los grupos</option>';
+                    
+                    const gruposFiltrados = grupos.filter(g => 
+                        g.id_carrera == carreraId && g.semestre == semestre
+                    );
+                    
+                    gruposFiltrados.forEach(grupo => {
+                        grupoSelect.innerHTML += `<option value="${grupo.id_grupo}">${grupo.nombre_grupo}</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al obtener grupos:', error);
+                    showAlert('Error al cargar grupos', 'error');
+                });
+        });
+        
+        async function consultarEstructura() {
+            const carreraId = document.getElementById('viewCarrera').value;
+            const semestre = document.getElementById('viewSemestre').value;
+            const grupoId = document.getElementById('viewGrupo').value;
+            
+            let url = '/api/estructura?';
+            
+            if (carreraId) url += `id_carrera=${carreraId}&`;
+            if (semestre) url += `semestre=${semestre}&`;
+            if (grupoId) url += `id_grupo=${grupoId}&`;
+            
+            try {
+                const response = await fetch(url);
+                const estructura = await response.json();
+                
+                const estructuraTable = document.getElementById('estructuraTable');
+                
+                if (estructura.length === 0) {
+                    estructuraTable.innerHTML = '<p>No hay datos que coincidan con los filtros seleccionados</p>';
+                    return;
+                }
+                
+                let html = '<table class="data-table">';
+                html += '<tr><th>Carrera</th><th>Grupo</th><th>Semestre</th><th>Total Alumnos</th></tr>';
+                
+                // Aseguramos que estructura sea un array antes de usar forEach
+                if (!Array.isArray(estructura)) {
+                    console.log('La estructura no es un array:', estructura);
+                    estructura = [];
+                }
+                
+                estructura.forEach(item => {
+                    // Verificar que el item existe y tiene las propiedades necesarias
+                    if (!item) return;
+                    
+                    // Si es un resumen (total) mostrar con estilo diferente
+                    if (!item.nombre_grupo && item.id_carrera) {
+                        html += `<tr style="font-weight: bold; background: #f0f0f0;">
+                            <td>${item.nombre_carrera || 'N/A'} (${item.codigo_carrera || 'N/A'})</td>
+                            <td colspan="2">TODOS LOS GRUPOS</td>
+                            <td>${item.total_alumnos || 0}</td>
+                        </tr>`;
+                    } else if (item.id_grupo) {
+                        html += `<tr>
+                            <td>${item.nombre_carrera || 'N/A'} (${item.codigo_carrera || 'N/A'})</td>
+                            <td>${item.nombre_grupo || 'N/A'}</td>
+                            <td>${item.semestre || 'N/A'}° Semestre</td>
+                            <td>${item.total_alumnos || 0}</td>
+                        </tr>`;
+                    }
+                });
+                
+                html += '</table>';
+                estructuraTable.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error al consultar estructura:', error);
+                showAlert('Error al obtener estructura del sistema', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

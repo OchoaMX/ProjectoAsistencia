@@ -1,0 +1,32 @@
+<%- include('partials/header', { 
+    title: 'Carreras - Panel de Administración',
+    currentPage: 'carreras',
+    cssFile: 'carreras.css',
+    jsFile: 'carreras.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Registro de Carreras</h2>
+    <form id="formCarrera">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nombreCarrera">Nombre de la Carrera:</label>
+                <input type="text" id="nombreCarrera" name="nombreCarrera" placeholder="Ej: Ingeniería en Sistemas Computacionales" required>
+            </div>
+            <div class="form-group">
+                <label for="codigoCarrera">Código de Carrera:</label>
+                <input type="text" id="codigoCarrera" name="codigoCarrera" placeholder="Ej: ISC" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Registrar Carrera
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Carreras Registradas</h3>
+        <div id="carrerasTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'carreras.js' }) %>

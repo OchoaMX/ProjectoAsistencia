@@ -1,0 +1,58 @@
+<%- include('partials/header', { 
+    title: 'Semestres - Panel de Administración',
+    currentPage: 'semestres',
+    cssFile: 'semestres.css',
+    jsFile: 'semestres.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Generador de Semestres</h2>
+    <form id="formSemestre">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="carreraSemestre">Carrera: <span class="required">*</span></label>
+                <select id="carreraSemestre" name="id_carrera" required>
+                    <option value="">Seleccionar carrera</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cantidadSemestres">Número de Semestres a Generar: <span class="required">*</span></label>
+                <select id="cantidadSemestres" name="cantidad_semestres" required>
+                    <option value="">Seleccionar cantidad</option>
+                    <option value="1">1 semestre</option>
+                    <option value="2">2 semestres</option>
+                    <option value="3">3 semestres</option>
+                    <option value="4">4 semestres</option>
+                    <option value="5">5 semestres</option>
+                    <option value="6">6 semestres</option>
+                    <option value="7">7 semestres</option>
+                    <option value="8">8 semestres</option>
+                    <option value="9">9 semestres</option>
+                    <option value="10">10 semestres</option>
+                    <option value="11">11 semestres</option>
+                    <option value="12">12 semestres</option>
+                </select>
+            </div>
+        </div>
+        <div class="info-message" id="infoMessage" style="display: none;">
+            <i class="fas fa-info-circle"></i>
+            <span id="infoText"></span>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-magic"></i> Generar Semestres
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Semestres Registrados</h3>
+        <div class="filter-section">
+            <label for="filterCarreraSemestre">Filtrar por Carrera:</label>
+            <select id="filterCarreraSemestre">
+                <option value="">Todas las carreras</option>
+            </select>
+        </div>
+        <div id="semestresTable"></div>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'semestres.js' }) %>

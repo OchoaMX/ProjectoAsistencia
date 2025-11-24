@@ -1,0 +1,219 @@
+/* Estilos específicos para la vista de Visualizar */
+
+.tab-content {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.section-title {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.view-controls {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 25px;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.view-controls select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    min-width: 200px;
+}
+
+.view-controls select:focus {
+    border-color: #4caf50;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
+#viewResults {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-top: 25px;
+}
+
+.data-table {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-top: 25px;
+}
+
+.data-table th {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    color: white;
+    padding: 15px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.data-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f1f3f4;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.data-table tr:hover {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    transform: scale(1.01);
+    transition: all 0.3s ease;
+}
+
+/* Estilos para grupos de alumnos */
+#viewResults h3 {
+    color: #4caf50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#viewResults h4 {
+    color: #4caf50;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 10px;
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+}
+
+/* Estilos para el indicador de carga */
+.fa-spinner {
+    color: #4caf50;
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilos para resúmenes */
+.data-table tr[style*="font-weight: bold"] {
+    background: linear-gradient(135deg, #f0f8f0 0%, #e8f5e8 100%) !important;
+    border: 2px solid #4caf50;
+}
+
+.data-table tr[style*="font-weight: bold"] td {
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+/* Estilos para contadores de alumnos */
+#viewResults p[style*="margin-top: 10px"] {
+    background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+    padding: 10px 15px;
+    border-radius: 8px;
+    border-left: 4px solid #4caf50;
+    margin-top: 15px;
+}
+
+/* Iconos específicos para visualizar */
+.section-title::before {
+    content: "📊";
+    margin-right: 10px;
+    font-size: 1.5rem;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tab-content {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .view-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .view-controls select {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .btn-primary {
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .data-table {
+        font-size: 0.9rem;
+    }
+    
+    .data-table th, .data-table td {
+        padding: 10px 8px;
+    }
+    
+    .data-table {
+        overflow-x: auto;
+    }
+    
+    #viewResults h3 {
+        font-size: 1.3rem;
+    }
+    
+    #viewResults h4 {
+        font-size: 1.1rem;
+    }
+}
+
+
+
+

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Prefectos - Dashboard</title>
+    <link rel="stylesheet" href="/css/<%= cssFile %>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/auth-common.js"></script>
+    <script src="/js/auth-utils.js"></script>
+</head>
+<body>
+    <div class="prefecto-container">
+        <!-- Header -->
+        <header class="prefecto-header">
+            <div class="prefecto-header-content">
+                <div class="prefecto-title">
+                    <i class="fas fa-school icon"></i>
+                    PORTAL DE PREFECTOS - Sistema de Asistencia Escolar
+                </div>
+                <div class="prefecto-user-info">
+                    <span class="prefecto-user-name">
+                        <i class="fas fa-user-circle"></i>
+                        <%= user ? user.nombre : 'Usuario del Sistema' %>
+                    </span>
+                    <button onclick="cerrarSesion()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegación -->
+        <nav class="prefecto-nav">
+            <div class="prefecto-nav-content">
+                <a href="/prefecto/dashboard" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/prefecto/alumnos-problematicos" class="nav-link">
+                    <i class="fas fa-user-times"></i>
+                    Alumnos Problemáticos
+                </a>
+                <a href="/prefecto/maestros-control" class="nav-link">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Control Maestros
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="prefecto-main">
+            <!-- Fecha y controles -->
+            <div class="prefecto-date-header fade-in">
+                <div class="current-date">
+                    <i class="fas fa-calendar-day"></i>
+                    <span id="currentDate">HOY: Lunes, 4 de Noviembre 2025</span>
+                </div>
+                <button class="refresh-btn" onclick="refreshDashboard()">
+                    <i class="fas fa-sync-alt"></i>
+                    Actualizar
+                </button>
+            </div>
+
+            <!-- Métricas principales -->
+            <div class="metrics-grid fade-in">
+                <div class="metric-card primary">
+                    <div class="metric-header">
+                        <span class="metric-title">Total Alumnos</span>
+                        <i class="fas fa-users metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="totalAlumnos">850</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-header">
+                        <span class="metric-title">Presentes Hoy</span>
+                        <i class="fas fa-check-circle metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="presentesHoy">765</div>
+                    <div class="metric-percentage positive" id="porcentajePresentes">
+                        <i class="fas fa-arrow-up"></i>
+                        90.0% ✅
+                    </div>
+                </div>
+
+                <div class="metric-card warning">
+                    <div class="metric-header">
+                        <span class="metric-title">Faltas Hoy</span>
+                        <i class="fas fa-exclamation-triangle metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="faltasHoy">72</div>
+                    <div class="metric-percentage negative" id="porcentajeFaltas">
+                        <i class="fas fa-arrow-down"></i>
+                        8.5% ⚠️
+                    </div>
+                </div>
+
+                <div class="metric-card info">
+                    <div class="metric-header">
+                        <span class="metric-title">Justificantes Hoy</span>
+                        <i class="fas fa-file-medical metric-icon"></i>
+                    </div>
+                    <div class="metric-value" id="justificantesHoy">13</div>
+                    <div class="metric-percentage neutral" id="porcentajeJustificantes">
+                        1.5%
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de contenido principal -->
+            <div class="content-grid two-columns">
+                <!-- Tendencia de Asistencia -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-chart-line"></i>
+                            Tendencia de Asistencia (Últimos 7 días)
+                        </h2>
+                        <div class="panel-actions">
+                            <select id="tendenciaPeriodo" class="filter-select" onchange="updateTendencia()">
+                                <option value="7">Últimos 7 días</option>
+                                <option value="15">Últimos 15 días</option>
+                                <option value="30">Últimos 30 días</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-content">
+                        <div class="chart-container">
+                            <canvas id="tendenciaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas Importantes -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-bell"></i>
+                            Alertas Importantes
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="alerts-grid" id="alertasContainer">
+                            <div class="alert-item critical">
+                                <i class="fas fa-exclamation-circle alert-icon"></i>
+                                <span id="alertaAlumnos">12 alumnos con más de 5 faltas esta semana</span>
+                            </div>
+                            <div class="alert-item warning">
+                                <i class="fas fa-clock alert-icon"></i>
+                                <span id="alertaMaestros">3 maestros sin registrar asistencia hoy</span>
+                            </div>
+                            <div class="alert-item success">
+                                <i class="fas fa-trophy alert-icon"></i>
+                                <span id="alertaGrupos">Grupo 5B con 100% de asistencia</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <a href="/prefecto/alumnos-problematicos" class="action-btn danger">
+                                <i class="fas fa-users"></i>
+                                Ver Alumnos Problemáticos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rankings de Grupos -->
+            <div class="content-grid two-columns">
+                <!-- Top 5 Mejores -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-medal"></i>
+                            Top 5 Grupos con Mejor Asistencia
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="ranking-list" id="mejoresGrupos">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top 5 Peores -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Top 5 Grupos con Menor Asistencia
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="ranking-list" id="peoresGrupos">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Estadísticas Adicionales -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Análisis Detallado
+                    </h2>
+                    <div class="panel-actions">
+                        <button class="action-btn ghost" onclick="exportarReporte()">
+                            <i class="fas fa-download"></i>
+                            Exportar Reporte
+                        </button>
+                        <button class="action-btn primary" onclick="verAnalisisCompleto()">
+                            <i class="fas fa-chart-bar"></i>
+                            Análisis Completo
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="content-grid three-columns">
+                        <div class="metric-card info">
+                            <div class="metric-header">
+                                <span class="metric-title">Promedio Semanal</span>
+                                <i class="fas fa-percentage metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="promedioSemanal">87.5%</div>
+                        </div>
+                        
+                        <div class="metric-card success">
+                            <div class="metric-header">
+                                <span class="metric-title">Grupos Excelentes</span>
+                                <i class="fas fa-star metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="gruposExcelentes">15</div>
+                            <div class="metric-percentage positive">
+                                +90% asistencia
+                            </div>
+                            <button class="metric-detail-btn success" onclick="verGruposExcelentes()" title="Ver grupos excelentes">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                        </div>
+                        
+                        <div class="metric-card danger">
+                            <div class="metric-header">
+                                <span class="metric-title">Grupos Críticos</span>
+                                <i class="fas fa-warning metric-icon"></i>
+                            </div>
+                            <div class="metric-value" id="gruposCriticos">3</div>
+                            <div class="metric-percentage negative">
+                                <70% asistencia
+                            </div>
+                            <button class="metric-detail-btn danger" onclick="verGruposCriticos()" title="Ver grupos críticos">
+                                <i class="fas fa-eye"></i> Ver Detalles
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;">
+        <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                Cargando datos...
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver grupos -->
+    <div id="modalGrupos" class="modal hidden">
+        <div class="modal-overlay" onclick="cerrarModalGrupos()"></div>
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="modalGruposTitulo">Grupos</h3>
+                <button class="modal-close" onclick="cerrarModalGrupos()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="modalGruposContenido">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/<%= jsFile %>"></script>
+</body>
+</html>

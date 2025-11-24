@@ -1,0 +1,158 @@
+<%- include('partials/header', { 
+    title: 'Alumnos - Panel de Administración',
+    currentPage: 'alumnos',
+    cssFile: 'alumnos.css',
+    jsFile: 'alumnos.js'
+}) %>
+
+<div class="tab-content active">
+    <h2 class="section-title">Registro de Alumnos</h2>
+    <form id="formAlumno">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="matricula">Matrícula:</label>
+                <input type="text" id="matricula" name="matricula" required>
+            </div>
+            <div class="form-group">
+                <label for="nombreAlumno">Nombre(s):</label>
+                <input type="text" id="nombreAlumno" name="nombreAlumno" required>
+            </div>
+            <div class="form-group">
+                <label for="apellidoPaterno">Apellido Paterno:</label>
+                <input type="text" id="apellidoPaterno" name="apellidoPaterno" required>
+            </div>
+            <div class="form-group">
+                <label for="apellidoMaterno">Apellido Materno:</label>
+                <input type="text" id="apellidoMaterno" name="apellidoMaterno">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="idCarreraAlumno">Carrera: <span class="required">*</span></label>
+                <select id="idCarreraAlumno" name="idCarreraAlumno" required>
+                    <option value="">Seleccionar carrera...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="idSemestreAlumno">Semestre: <span class="required">*</span></label>
+                <select id="idSemestreAlumno" name="idSemestreAlumno" required>
+                    <option value="">Primero selecciona una carrera</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="idGrupoAlumno">Grupo: <span class="required">*</span></label>
+                <select id="idGrupoAlumno" name="idGrupoAlumno" required>
+                    <option value="">Primero selecciona carrera y semestre</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+                <label for="fotoAlumno">Foto del Alumno (opcional):</label>
+                <img id="fotoPreview" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; display: none; margin: 10px auto;">
+                <input type="file" id="fotoAlumno" name="fotoAlumno" accept="image/*" onchange="handleFotoChange(this, 'fotoPreview')">
+                <small style="color: #666;">Formatos: JPG, PNG. Máximo 2MB. La foto se guardará en la base de datos.</small>
+            </div>
+        </div>
+        <button type="submit" class="btn-primary">
+            <i class="fas fa-save"></i> Registrar Alumno
+        </button>
+        <button type="button" class="btn-secondary" onclick="abrirModalImportarCSV()" style="margin-left: 10px;">
+            <i class="fas fa-file-upload"></i> Importar desde CSV
+        </button>
+    </form>
+    
+    <div class="view-section">
+        <h3>Alumnos Registrados</h3>
+        <div class="filter-section">
+            <label for="filterCarreraAlumno">Filtrar por Carrera:</label>
+            <select id="filterCarreraAlumno">
+                <option value="">Todas las carreras</option>
+            </select>
+            <label for="filterSemestreAlumno">Filtrar por Semestre:</label>
+            <select id="filterSemestreAlumno">
+                <option value="">Todos los semestres</option>
+            </select>
+            <label for="filterGrupoAlumno">Filtrar por Grupo:</label>
+            <select id="filterGrupoAlumno">
+                <option value="">Todos los grupos</option>
+            </select>
+        </div>
+        <div id="alumnosTable"></div>
+    </div>
+</div>
+
+<!-- Indicador de carga para importación -->
+<div id="loadingOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10000; justify-content: center; align-items: center;">
+    <div style="text-align: center; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <div class="spinner" style="border: 8px solid #f3f3f3; border-top: 8px solid #667eea; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+        <h3 style="margin: 0 0 10px 0; color: #333;">Importando alumnos...</h3>
+        <p id="loadingMessage" style="color: #666; margin: 0;">Por favor espera, esto puede tomar unos momentos</p>
+        <p id="loadingProgress" style="color: #667eea; font-weight: bold; margin: 10px 0 0 0;"></p>
+    </div>
+</div>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+
+<!-- Modal para importar CSV -->
+<div id="modalImportarCSV" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px;">
+        <span class="close" onclick="cerrarModalImportarCSV()">&times;</span>
+        <h2>Importar Alumnos desde CSV</h2>
+        
+        <form id="formImportarCSV">
+            <div class="form-group">
+                <label for="archivoCSV">Archivo CSV:</label>
+                <input type="file" id="archivoCSV" accept=".csv" required>
+                <small style="color: #666; display: block; margin-top: 5px;">
+                    <strong>Formato esperado:</strong> El archivo debe contener una línea con "Matricula,Nombre"<br>
+                    <strong>Ejemplo:</strong> 240460093-0, ACOSTA BARRON JUAN CARLOS<br>
+                    <em>Nota: Se ignoran automáticamente líneas de encabezado y columnas adicionales</em>
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="csvCarrera">Carrera: <span class="required">*</span></label>
+                <select id="csvCarrera" required>
+                    <option value="">Seleccionar carrera...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="csvSemestre">Semestre: <span class="required">*</span></label>
+                <select id="csvSemestre" required>
+                    <option value="">Primero selecciona una carrera</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="csvGrupo">Grupo: <span class="required">*</span></label>
+                <select id="csvGrupo" required>
+                    <option value="">Primero selecciona carrera y semestre</option>
+                </select>
+            </div>
+            
+            <div id="vistaPrevia" style="display: none; margin: 20px 0;">
+                <h4>Vista Previa (primeros 5 registros):</h4>
+                <div id="vistaPreviaContenido" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #f9f9f9;"></div>
+                <p id="totalRegistros" style="margin-top: 10px; font-weight: bold;"></p>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-upload"></i> Importar Alumnos
+                </button>
+                <button type="button" class="btn-secondary" onclick="cerrarModalImportarCSV()">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<%- include('partials/footer', { jsFile: 'alumnos.js' }) %>

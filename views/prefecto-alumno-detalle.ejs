@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Prefectos - Detalle de Alumno</title>
+    <link rel="stylesheet" href="/css/<%= cssFile %>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/js/auth-common.js"></script>
+</head>
+<body>
+    <div class="prefecto-container">
+        <!-- Header -->
+        <header class="prefecto-header">
+            <div class="prefecto-header-content">
+                <div class="prefecto-title">
+                    <i class="fas fa-school icon"></i>
+                    PORTAL DE PREFECTOS - Sistema de Asistencia Escolar
+                </div>
+                <div class="prefecto-user-info">
+                    <span class="prefecto-user-name">
+                        <i class="fas fa-user-circle"></i>
+                        <%= user ? user.nombre : 'Usuario del Sistema' %>
+                    </span>
+                    <button onclick="cerrarSesion()" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navegación -->
+        <nav class="prefecto-nav">
+            <div class="prefecto-nav-content">
+                <a href="/prefecto/dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+                <a href="/prefecto/alumnos-problematicos" class="nav-link">
+                    <i class="fas fa-user-times"></i>
+                    Alumnos Problemáticos
+                </a>
+                <a href="/prefecto/maestros-control" class="nav-link">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    Control Maestros
+                </a>
+            </div>
+        </nav>
+
+        <!-- Contenido Principal -->
+        <main class="prefecto-main">
+            <!-- Header con botón de regreso -->
+            <div class="prefecto-date-header fade-in">
+                <div class="flex items-center gap-2">
+                    <a href="/prefecto/alumnos-problematicos" class="action-btn ghost">
+                        <i class="fas fa-arrow-left"></i>
+                        Regresar
+                    </a>
+                    <div class="current-date">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>PERFIL DE ALUMNO</span>
+                    </div>
+                </div>
+                <div class="panel-actions">
+                    <div id="badgeAtendido" class="badge-caso-atendido" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        Caso Atendido
+                    </div>
+                    <button class="action-btn warning" onclick="generarCitatorio()">
+                        <i class="fas fa-file-text"></i>
+                        Generar Citatorio
+                    </button>
+                    <button class="action-btn success" id="btnMarcarAtendido" onclick="marcarAtendido()">
+                        <i class="fas fa-check-circle"></i>
+                        Marcar como Atendido
+                    </button>
+                </div>
+            </div>
+
+            <!-- Información básica del alumno -->
+            <div class="panel fade-in">
+                <div class="panel-content">
+                    <div class="content-grid two-columns" id="alumnoBasico">
+                        <!-- Foto y datos básicos -->
+                        <div class="student-profile">
+                            <div class="profile-photo">
+                                <i class="fas fa-user-graduate"></i>
+                                <img id="alumnoFoto" src="" alt="Foto del alumno" style="display: none;">
+                            </div>
+                            <div class="profile-info">
+                                <h2 id="alumnoNombre" class="loading-text">Cargando...</h2>
+                                <div class="info-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">Matrícula:</span>
+                                        <span id="alumnoMatricula" class="info-value">...</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Carrera:</span>
+                                        <span id="alumnoCarrera" class="info-value">...</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Semestre:</span>
+                                        <span id="alumnoSemestre" class="info-value">...</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Grupo:</span>
+                                        <span id="alumnoGrupo" class="info-value">...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Estadísticas generales -->
+                        <div class="stats-overview">
+                            <h3 class="stats-title">
+                                <i class="fas fa-chart-bar"></i>
+                                Estadísticas Generales
+                            </h3>
+                            <div class="metrics-grid">
+                                <div class="metric-card success">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Asistencias</span>
+                                        <i class="fas fa-check-circle metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="totalAsistencias">0</div>
+                                </div>
+                                <div class="metric-card danger">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Faltas</span>
+                                        <i class="fas fa-times-circle metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="totalFaltas">0</div>
+                                </div>
+                                <div class="metric-card info">
+                                    <div class="metric-header">
+                                        <span class="metric-title">Justificantes</span>
+                                        <i class="fas fa-file-medical metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="totalJustificantes">0</div>
+                                </div>
+                                <div class="metric-card primary">
+                                    <div class="metric-header">
+                                        <span class="metric-title">% Global</span>
+                                        <i class="fas fa-percentage metric-icon"></i>
+                                    </div>
+                                    <div class="metric-value" id="porcentajeGlobal">0%</div>
+                                    <div class="metric-percentage" id="estadoGlobal">
+                                        <!-- Se actualiza dinámicamente -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asistencia por materia -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-book"></i>
+                        Asistencia por Materia
+                    </h2>
+                    <div class="panel-actions">
+                        <select id="periodoMateria" class="filter-select" onchange="updatePeriodo()">
+                            <option value="15">Últimas 2 semanas</option>
+                            <option value="30" selected>Último mes</option>
+                            <option value="60">Últimos 2 meses</option>
+                            <option value="90">Últimos 3 meses</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Materia</th>
+                                    <th class="text-center">✅ Asist.</th>
+                                    <th class="text-center">❌ Faltas</th>
+                                    <th class="text-center">📝 Just.</th>
+                                    <th class="text-center">% Asistencia</th>
+                                    <th class="text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaMaterias">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de contenido adicional -->
+            <div class="content-grid two-columns">
+                <!-- Gráfica de tendencia -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-chart-line"></i>
+                            Tendencia de Asistencia
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="chart-container large">
+                            <canvas id="tendenciaAlumnoChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial reciente -->
+                <div class="panel fade-in">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-history"></i>
+                            Historial Reciente (Últimos 15 registros)
+                        </h2>
+                    </div>
+                    <div class="panel-content">
+                        <div class="historial-container" id="historialReciente">
+                            <!-- Se llena dinámicamente -->
+                        </div>
+                        <div class="text-center mt-4">
+                            <button class="action-btn ghost" onclick="verHistorialCompleto()">
+                                <i class="fas fa-list"></i>
+                                Ver Historial Completo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historial detallado expandible -->
+            <div class="panel fade-in" id="panelHistorialCompleto" style="display: none;">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-calendar-alt"></i>
+                        Historial Detallado Completo
+                    </h2>
+                    <div class="panel-actions">
+                        <button class="action-btn ghost" onclick="ocultarHistorialCompleto()">
+                            <i class="fas fa-eye-slash"></i>
+                            Ocultar
+                        </button>
+                        <button class="action-btn success" onclick="exportarHistorial()">
+                            <i class="fas fa-download"></i>
+                            Exportar
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Materia</th>
+                                    <th>Estado</th>
+                                    <th>Maestro</th>
+                                    <th>Observaciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaHistorialCompleto">
+                                <!-- Se llena dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones disciplinarias -->
+            <div class="panel fade-in">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Acciones Disponibles
+                    </h2>
+                </div>
+                <div class="panel-content">
+                    <div class="actions-grid-simple">
+                        <button class="action-card primary" onclick="generarCitatorio()">
+                            <div class="action-icon">
+                                <i class="fas fa-file-text"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Generar Citatorio para Padres</h4>
+                                <p>Crear documento oficial para citar a los padres de familia</p>
+                            </div>
+                        </button>
+                        
+                        <button class="action-card success" id="btnMarcarAtendidoCard" onclick="marcarAtendido()">
+                            <div class="action-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="action-info">
+                                <h4>Marcar como Caso Atendido</h4>
+                                <p>Registrar que se tomaron las acciones necesarias</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden">
+        <div style="background: white; padding: 2rem; border-radius: 8px; text-align: center;">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                Cargando información del alumno...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pasar el ID del alumno al JavaScript
+        window.alumnoId = <%= alumnoId %>;
+    </script>
+    <script src="/js/auth-utils.js"></script>
+    <script src="/js/<%= jsFile %>"></script>
+    
+    <style>
+        /* Estilos específicos para el detalle de alumno */
+        .student-profile {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--color-gray-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--color-gray-400);
+            border: 3px solid var(--color-primary);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .profile-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 1rem 0;
+            color: var(--color-gray-800);
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .info-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--color-gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+        }
+
+        .stats-overview {
+            background: var(--color-gray-50);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+        }
+
+        .stats-title {
+            margin: 0 0 1.5rem 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-gray-800);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .historial-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid var(--color-gray-200);
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            font-weight: 600;
+            color: var(--color-gray-600);
+            white-space: nowrap;
+            font-size: 0.875rem;
+        }
+
+        .history-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .history-subject {
+            font-weight: 600;
+            color: var(--color-gray-800);
+        }
+
+        .history-teacher {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        .history-observation {
+            font-size: 0.875rem;
+            font-style: italic;
+            color: var(--color-gray-500);
+        }
+
+        .history-status {
+            text-align: center;
+        }
+
+        .action-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            border-radius: var(--border-radius);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-card.primary {
+            border-color: var(--color-primary);
+        }
+
+        .action-card.primary:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .action-card.warning {
+            border-color: var(--color-warning);
+        }
+
+        .action-card.warning:hover {
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .action-card.danger {
+            border-color: var(--color-danger);
+        }
+
+        .action-card.danger:hover {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .action-card.success {
+            border-color: var(--color-success);
+        }
+
+        .action-card.success:hover {
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .action-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-card.primary .action-icon {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--color-primary);
+        }
+
+        .action-card.warning .action-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+
+        .action-card.danger .action-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+        }
+
+        .action-card.success .action-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+
+        .action-info h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .action-info p {
+            margin: 0;
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        /* Grid simple para acciones */
+        .actions-grid-simple {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Badge de caso atendido */
+        .badge-caso-atendido {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--color-success), #059669);
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+            animation: slideInDown 0.5s ease;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .badge-caso-atendido i {
+            font-size: 1.3rem;
+            animation: checkPulse 2s infinite;
+        }
+
+        @keyframes checkPulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        /* Estado atendido en las cards */
+        .action-card.atendido {
+            opacity: 0.6;
+            cursor: not-allowed;
+            position: relative;
+        }
+
+        .action-card.atendido::after {
+            content: '✓ Completado';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--color-success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .loading-text {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .student-profile {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            .history-item {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</body>
+</html>
